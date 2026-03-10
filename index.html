@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESC Python – Attendance System | ISE Dept</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #00e5ff;
+    --green: #00ff9d;
+    --red: #ff4466;
+    --yellow: #ffd60a;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .screen { display: none; position: relative; z-index: 1; }
+  .screen.active { display: block; }
+
+  /* ── LOGIN ── */
+  #screen-login {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 48px; padding: 24px;
+  }
+
+  .logo-area { text-align: center; }
+  .logo-area .dept { font-size: 11px; letter-spacing: 4px; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; }
+  .logo-area h1 { font-family: var(--font-head); font-size: clamp(28px,5vw,48px); font-weight: 800; line-height: 1.1; }
+  .logo-area h1 span { color: var(--accent); }
+  .logo-area .sub { font-size: 12px; color: var(--muted); margin-top: 8px; letter-spacing: 2px; }
+  .logo-area .v-badge {
+    display: inline-block; margin-top: 12px;
+    background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.3);
+    color: var(--accent); font-size: 10px; letter-spacing: 2px;
+    padding: 4px 12px; border-radius: 20px;
+  }
+
+  .login-cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+
+  .login-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px 40px;
+    cursor: pointer; transition: all 0.3s ease;
+    text-align: center; min-width: 180px;
+    position: relative; overflow: hidden;
+  }
+  .login-card::before { content:''; position:absolute; inset:0; opacity:0; transition:opacity 0.3s; }
+  .login-card.teacher::before { background: radial-gradient(circle at 50% 0%, rgba(0,229,255,0.15), transparent 70%); }
+  .login-card.student::before { background: radial-gradient(circle at 50% 0%, rgba(0,255,157,0.15), transparent 70%); }
+  .login-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+  .login-card:hover::before { opacity: 1; }
+  .login-card.student:hover { border-color: var(--green); }
+  .login-card .icon { font-size: 40px; margin-bottom: 12px; }
+  .login-card h3 { font-family: var(--font-head); font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .login-card p { font-size: 11px; color: var(--muted); }
+
+  /* ── COMMON ── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 32px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .topbar h2 { font-family: var(--font-head); font-size: 22px; font-weight: 800; }
+  .topbar h2 span { color: var(--accent); }
+
+  .btn {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 1px; padding: 10px 20px;
+    border: none; border-radius: 8px; cursor: pointer;
+    transition: all 0.2s; text-transform: uppercase;
+  }
+  .btn-green  { background: var(--green);  color: #000; }
+  .btn-green:hover  { background: #33ffb0; transform: translateY(-1px); }
+  .btn-red    { background: var(--red);    color: #fff; }
+  .btn-red:hover    { background: #ff6680; transform: translateY(-1px); }
+  .btn-ghost  { background: transparent;  color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover  { border-color: var(--accent); color: var(--accent); }
+  .btn-yellow { background: var(--yellow); color: #000; }
+  .btn-yellow:hover { background: #ffe033; }
+  .btn-accent { background: var(--accent); color: #000; }
+  .btn-accent:hover { background: #33eeff; transform: translateY(-1px); }
+
+  /* Big open/close toggle */
+  .toggle-btn {
+    width: 100%; padding: 18px;
+    font-family: var(--font-head); font-size: 18px; font-weight: 800;
+    border: none; border-radius: 14px; cursor: pointer;
+    transition: all 0.25s; letter-spacing: 1px;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .toggle-btn.open-btn  { background: var(--green); color: #000; box-shadow: 0 0 30px rgba(0,255,157,0.25); }
+  .toggle-btn.open-btn:hover  { background: #33ffb0; box-shadow: 0 0 40px rgba(0,255,157,0.4); transform: translateY(-2px); }
+  .toggle-btn.close-btn { background: var(--red);   color: #fff; box-shadow: 0 0 30px rgba(255,68,102,0.25); }
+  .toggle-btn.close-btn:hover { background: #ff6680; box-shadow: 0 0 40px rgba(255,68,102,0.4); transform: translateY(-2px); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media(max-width:700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+
+  .card-title {
+    font-family: var(--font-head); font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 20px;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field label { display:block; font-size:11px; color:var(--muted); letter-spacing:1px; margin-bottom:6px; text-transform:uppercase; }
+  .field input, .field select {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; color: var(--text);
+    font-family: var(--font-mono); font-size: 13px; outline: none; transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field select option { background: var(--surface); }
+  .field input:disabled, .field select:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 18px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  }
+  .status-badge.open   { background: rgba(0,255,157,0.15); color: var(--green); border: 1px solid rgba(0,255,157,0.3); }
+  .status-badge.closed { background: rgba(255,68,102,0.15); color: var(--red);   border: 1px solid rgba(255,68,102,0.3); }
+  .status-badge.idle   { background: rgba(107,107,138,0.2); color: var(--muted); border: 1px solid var(--border); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .dot.blink { animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* Share panel */
+  .qr-area { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+
+  .share-idle { text-align:center; padding:24px 0; color:var(--muted); }
+  .share-idle .si-icon { font-size: 40px; margin-bottom: 10px; }
+  .share-idle p { font-size: 12px; line-height: 1.7; }
+
+  .wa-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; width: 100%;
+  }
+  .wa-box-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .wa-msg { font-size: 12px; line-height: 1.8; color: var(--text); white-space: pre-wrap; word-break: break-all; }
+
+  .share-actions { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
+  .share-actions .btn { flex: 1; min-width: 120px; }
+
+  /* Live count pills */
+  .live-count { display: flex; gap: 12px; flex-wrap: wrap; width: 100%; }
+  .count-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; text-align: center; flex: 1; min-width: 70px; }
+  .count-pill .num { font-family: var(--font-head); font-size: 28px; font-weight: 800; line-height: 1; }
+  .count-pill .lbl { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+  .count-pill.present .num { color: var(--green); }
+  .count-pill.absent  .num { color: var(--red); }
+  .count-pill.total   .num { color: var(--accent); }
+
+  /* Attendance table */
+  .att-table-wrap { overflow-x: auto; max-height: 420px; overflow-y: auto; margin-top: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--surface); padding: 10px 12px; text-align: left; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); position: sticky; top: 0; z-index: 2; }
+  td { padding: 9px 12px; border-bottom: 1px solid rgba(42,42,61,0.5); vertical-align: middle; }
+  tr:hover td { background: rgba(0,229,255,0.03); }
+  .badge-p { display:inline-block; background:rgba(0,255,157,0.15); color:var(--green); border:1px solid rgba(0,255,157,0.3); border-radius:4px; padding:2px 8px; font-size:10px; font-weight:700; }
+  .badge-a { display:inline-block; background:rgba(255,68,102,0.15); color:var(--red);   border:1px solid rgba(255,68,102,0.3); border-radius:4px; padding:2px 8px; font-size:10px; font-weight:700; }
+  .usn-chip { font-size:10px; color:var(--muted); background:var(--surface); padding:2px 6px; border-radius:4px; }
+
+  /* Past sessions */
+  .history-session {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 10px; cursor: pointer; transition: border-color 0.2s;
+  }
+  .history-session:hover { border-color: var(--accent); }
+  .hs-date { font-size: 13px; font-weight: 600; }
+  .hs-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .hs-stats { display: flex; gap: 12px; font-size: 12px; }
+  .hs-p { color: var(--green); font-weight: 700; }
+  .hs-a { color: var(--red); font-weight: 700; }
+
+  /* Student screen */
+  #screen-student {
+    min-height: 100vh; display: flex;
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .student-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 40px 32px;
+    max-width: 420px; width: 100%; text-align: center;
+  }
+  .student-card h2 { font-family: var(--font-head); font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+  .student-card .sub { font-size: 11px; color: var(--muted); margin-bottom: 28px; letter-spacing: 1px; }
+
+  .session-info-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;
+    font-size: 12px; color: var(--muted); text-align: left;
+  }
+  .session-info-box strong { color: var(--text); }
+
+  .big-input {
+    width: 100%; background: var(--surface); border: 2px solid var(--border);
+    border-radius: 12px; padding: 16px; color: var(--text);
+    font-family: var(--font-mono); font-size: 16px; font-weight: 600;
+    text-align: center; letter-spacing: 2px; outline: none;
+    transition: border-color 0.2s; margin-bottom: 14px; text-transform: uppercase;
+  }
+  .big-input:focus { border-color: var(--green); }
+
+  .submit-btn {
+    width: 100%; padding: 16px; font-family: var(--font-head);
+    font-size: 16px; font-weight: 700; background: var(--green);
+    color: #000; border: none; border-radius: 12px; cursor: pointer;
+    transition: all 0.2s; letter-spacing: 1px;
+  }
+  .submit-btn:hover { background: #33ffb0; transform: translateY(-2px); }
+  .submit-btn:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
+
+  .result-box { border-radius: 12px; padding: 20px; margin-top: 16px; display: none; }
+  .result-box.success { background: rgba(0,255,157,0.1); border: 1px solid rgba(0,255,157,0.3); }
+  .result-box.error   { background: rgba(255,68,102,0.1); border: 1px solid rgba(255,68,102,0.3); }
+  .result-box .icon { font-size: 32px; margin-bottom: 8px; }
+  .result-box h3 { font-family: var(--font-head); font-size: 18px; font-weight: 700; }
+  .result-box p { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .closed-msg {
+    background: rgba(255,68,102,0.1); border: 1px solid rgba(255,68,102,0.3);
+    border-radius: 12px; padding: 20px; margin-bottom: 20px;
+    color: var(--red); font-size: 14px;
+  }
+
+  /* Full register */
+  .pct-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .pct-bar { height: 4px; background: var(--border); border-radius: 2px; flex: 1; min-width: 60px; }
+  .pct-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+
+  /* Misc */
+  .search-input {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; color: var(--text);
+    font-family: var(--font-mono); font-size: 12px; outline: none;
+    width: 200px; transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+
+  .empty-state { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
+  .empty-state .e-icon { font-size:40px; margin-bottom:12px; }
+
+  .flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .section-gap { margin-bottom: 20px; }
+
+  .notif {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 20px; font-size: 13px;
+    z-index: 9999; transform: translateY(80px); opacity: 0;
+    transition: all 0.3s ease; max-width: 320px;
+  }
+  .notif.show { transform: translateY(0); opacity: 1; }
+  .notif.success { border-color: var(--green); color: var(--green); }
+  .notif.error   { border-color: var(--red);   color: var(--red); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Elapsed time display */
+  .elapsed {
+    font-family: var(--font-head); font-size: 36px; font-weight: 800;
+    color: var(--accent); letter-spacing: -1px; line-height: 1;
+    text-align: center;
+  }
+  .elapsed-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; text-align: center; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════ LOGIN ══ -->
+<div id="screen-login" class="screen active">
+  <div class="logo-area">
+    <div class="dept">ISE Dept · GIT College</div>
+    <h1>Attendance<br><span>System</span></h1>
+    <div class="sub">ESC – Python Programming · 2025–26</div>
+    <div class="v-badge">VERSION 2 — MANUAL CONTROL</div>
+  </div>
+  <div class="login-cards">
+    <div class="login-card teacher" onclick="showTeacher()">
+      <div class="icon">👨‍🏫</div>
+      <h3>Professor</h3>
+      <p>Manage sessions & records</p>
+    </div>
+    <div class="login-card student" onclick="showStudent()">
+      <div class="icon">🎓</div>
+      <h3>Student</h3>
+      <p>Mark your attendance</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ TEACHER ══ -->
+<div id="screen-teacher" class="screen">
+  <div style="padding:24px;max-width:1100px;margin:0 auto;">
+    <div class="topbar">
+      <h2>Professor <span>Dashboard</span> <span style="font-size:13px;color:var(--muted);font-weight:400;">v2</span></h2>
+      <div class="flex-row">
+        <button class="btn btn-ghost" onclick="showScreen('screen-full-table')">📊 Full Register</button>
+        <button class="btn btn-yellow" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="btn btn-ghost" onclick="showScreen('screen-login')">← Back</button>
+      </div>
+    </div>
+
+    <div class="grid-2 section-gap">
+
+      <!-- Session Setup -->
+      <div class="card">
+        <div class="card-title">📅 Session Setup</div>
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="sess-date">
+        </div>
+        <div class="field">
+          <label>Period / Slot</label>
+          <select id="sess-period">
+            <option value="P1">Period 1 (8:30–9:20)</option>
+            <option value="P2">Period 2 (9:20–10:10)</option>
+            <option value="P3">Period 3 (10:30–11:20)</option>
+            <option value="P4">Period 4 (11:20–12:10)</option>
+            <option value="P5">Period 5 (1:10–2:00)</option>
+            <option value="P6">Period 6 (2:00–2:50)</option>
+            <option value="Lab">Lab Session</option>
+          </select>
+        </div>
+
+        <div style="height:16px;"></div>
+
+        <!-- THE BIG TOGGLE BUTTON -->
+        <button class="toggle-btn open-btn" id="toggle-btn" onclick="toggleSession()">
+          <span id="toggle-icon">▶</span>
+          <span id="toggle-label">Open Attendance</span>
+        </button>
+
+        <div style="margin-top:16px;text-align:center;">
+          <span id="sess-status" class="status-badge idle"><span class="dot"></span>Idle — not started</span>
+        </div>
+
+        <!-- Elapsed time (visible when open) -->
+        <div id="elapsed-wrap" style="display:none;margin-top:16px;">
+          <div class="elapsed" id="elapsed-display">00:00</div>
+          <div class="elapsed-label">Session open for</div>
+        </div>
+      </div>
+
+      <!-- Share Panel -->
+      <div class="card">
+        <div class="card-title">📲 Share with Students</div>
+        <div class="qr-area">
+
+          <!-- Idle -->
+          <div class="share-idle" id="share-idle">
+            <div class="si-icon">💬</div>
+            <p>Open attendance to get<br>a WhatsApp-ready message</p>
+          </div>
+
+          <!-- Active -->
+          <div id="share-panel" style="display:none;width:100%;">
+            <div class="wa-box" style="margin-bottom:12px;">
+              <div class="wa-box-label">📋 WhatsApp Message — copy & paste</div>
+              <div class="wa-msg" id="wa-msg-text"></div>
+            </div>
+            <div class="share-actions" style="margin-bottom:12px;">
+              <button class="btn btn-green share-actions" id="copy-wa-btn" onclick="copyWAMessage()" style="flex:1;">📋 Copy Message</button>
+              <button class="btn btn-accent" onclick="openWhatsApp()" style="flex:1;">📱 Open WhatsApp</button>
+            </div>
+            <details>
+              <summary style="font-size:11px;color:var(--muted);cursor:pointer;letter-spacing:1px;text-transform:uppercase;padding:6px 0;">▶ Also show QR (for projector)</summary>
+              <div style="display:flex;justify-content:center;margin-top:12px;">
+                <div id="qr-container" style="background:white;padding:12px;border-radius:10px;display:inline-block;"></div>
+              </div>
+            </details>
+          </div>
+
+          <!-- Live count — always visible -->
+          <div class="live-count">
+            <div class="count-pill present"><div class="num" id="cnt-p">0</div><div class="lbl">Present</div></div>
+            <div class="count-pill absent"><div class="num" id="cnt-a">74</div><div class="lbl">Absent</div></div>
+            <div class="count-pill total"><div class="num">74</div><div class="lbl">Total</div></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Table -->
+    <div class="card section-gap">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div class="card-title" style="margin:0;">📋 Today's Attendance</div>
+        <input class="search-input" type="text" placeholder="🔍 Search name / USN…" oninput="filterTable(this.value)">
+      </div>
+      <div class="att-table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>USN</th><th>Name</th><th>Status</th><th>Time</th></tr>
+          </thead>
+          <tbody id="live-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Past Sessions -->
+    <div class="card">
+      <div class="card-title">🗂 Past Sessions</div>
+      <div id="history-list">
+        <div class="empty-state"><div class="e-icon">📭</div>No sessions yet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ STUDENT ══ -->
+<div id="screen-student" class="screen">
+  <div id="student-wrap" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
+    <div class="student-card">
+      <h2>Mark Attendance</h2>
+      <div class="sub">ESC – PYTHON · ISE DEPT · 2025–26</div>
+
+      <div id="student-session-info" class="session-info-box" style="display:none;">
+        <strong id="si-date">—</strong><br>
+        <span id="si-period">—</span> &nbsp;·&nbsp;
+        <span style="color:var(--green);font-weight:600;">🟢 Open</span>
+      </div>
+
+      <div id="student-closed-msg" class="closed-msg" style="display:none;">
+        ⛔ Attendance window is <strong>closed</strong>.<br>
+        <span style="font-size:11px;color:var(--muted);">Ask your professor to open it.</span>
+      </div>
+
+      <div id="student-form">
+        <input class="big-input" type="text" id="usn-input" placeholder="Enter your USN" autocomplete="off" spellcheck="false">
+        <button class="submit-btn" onclick="submitAttendance()">Mark Present ✓</button>
+      </div>
+
+      <div id="result-box" class="result-box">
+        <div class="icon" id="r-icon">✅</div>
+        <h3 id="r-title">Marked Present!</h3>
+        <p id="r-msg"></p>
+      </div>
+
+      <div style="margin-top:20px;">
+        <button class="btn btn-ghost" style="width:100%;" onclick="showScreen('screen-login')">← Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ FULL REGISTER ══ -->
+<div id="screen-full-table" class="screen">
+  <div style="padding:24px;max-width:1200px;margin:0 auto;">
+    <div class="topbar">
+      <h2>Full <span>Attendance Register</span></h2>
+      <div class="flex-row">
+        <button class="btn btn-yellow" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="btn btn-ghost" onclick="showScreen('screen-teacher')">← Back</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="att-table-wrap" style="max-height:none;">
+        <table>
+          <thead id="full-thead"><tr><th>#</th><th>USN</th><th>Name</th><th>%</th></tr></thead>
+          <tbody id="full-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification -->
+<div class="notif" id="notif"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+// STUDENT DATABASE — 74 students, ISE dept
+// ══════════════════════════════════════════════════
+const STUDENTS = [
+  {sl:1,usn:'2GI23IS103',name:'Sridhar B Awajjigol'},
+  {sl:2,usn:'2GI23IS111',name:'Tanishq Mj'},
+  {sl:3,usn:'2GI24IS002',name:'Aditya Malli'},
+  {sl:4,usn:'2GI24IS003',name:'Aditya M Medar'},
+  {sl:5,usn:'2GI24IS004',name:'Aditya Morab'},
+  {sl:6,usn:'2GI24IS006',name:'Akul R Sanu'},
+  {sl:7,usn:'2GI24IS010',name:'Ankita Santosh Chinti'},
+  {sl:8,usn:'2GI24IS011',name:'Anshul'},
+  {sl:9,usn:'2GI24IS012',name:'Anuragh K Talawar'},
+  {sl:10,usn:'2GI24IS013',name:'Apeksha Padwalkar'},
+  {sl:11,usn:'2GI24IS015',name:'Atharv Kitwadkar'},
+  {sl:12,usn:'2GI24IS016',name:'Basavaraj Biradar'},
+  {sl:13,usn:'2GI24IS017',name:'Bhagya Patil'},
+  {sl:14,usn:'2GI24IS019',name:'Bhargav M Kulkarni'},
+  {sl:15,usn:'2GI24IS022',name:'Darshan M Tulajan'},
+  {sl:16,usn:'2GI24IS023',name:'Dhanush D Naik'},
+  {sl:17,usn:'2GI24IS025',name:'Gautami Manjunath Bhute'},
+  {sl:18,usn:'2GI24IS026',name:'Girish Hadimani'},
+  {sl:19,usn:'2GI24IS027',name:'Guru Hampannavar'},
+  {sl:20,usn:'2GI24IS028',name:'Khushi Ravindra Majagavi'},
+  {sl:21,usn:'2GI24IS029',name:'Kshiti R S'},
+  {sl:22,usn:'2GI24IS030',name:'Laxman Awate'},
+  {sl:23,usn:'2GI24IS035',name:'Manasvi Jadhav'},
+  {sl:24,usn:'2GI24IS036',name:'Manjunath Hanamant Sarur'},
+  {sl:25,usn:'2GI24IS039',name:'Namita Dhadi'},
+  {sl:26,usn:'2GI24IS040',name:'Naveen Kumar k'},
+  {sl:27,usn:'2GI24IS043',name:'Nisarga Bairawadagi'},
+  {sl:28,usn:'2GI24IS044',name:'Omkar Bhovi'},
+  {sl:29,usn:'2GI24IS047',name:'Prajwal H'},
+  {sl:30,usn:'2GI24IS048',name:'Prajwal Manoj'},
+  {sl:31,usn:'2GI24IS049',name:'Pranav Panale'},
+  {sl:32,usn:'2GI24IS055',name:'Purva Naik'},
+  {sl:33,usn:'2GI24IS056',name:'Pushpadant mugganavar'},
+  {sl:34,usn:'2GI24Is058',name:'Rajeshwari Mallappa Ashi'},
+  {sl:35,usn:'2GI24IS060',name:'Ravi Soraganvi'},
+  {sl:36,usn:'2GI24IS061',name:'Ravinandan Shivapuer'},
+  {sl:37,usn:'2GI24IS062',name:'RITVIK RAJESH BILGEEKAR'},
+  {sl:38,usn:'2GI24IS063',name:'Rohitkumar Siddu Kuri'},
+  {sl:39,usn:'2GI24IS068',name:'Samarth Patil'},
+  {sl:40,usn:'2GI24IS069',name:'Sammed Patil'},
+  {sl:41,usn:'2GI24IS071',name:'Sanjana M Badiger'},
+  {sl:42,usn:'2GI24IS073',name:'Sarthak Patil'},
+  {sl:43,usn:'2GI24IS076',name:'SHIVANGI SINGH'},
+  {sl:44,usn:'2GI24IS082',name:'Shreya Nidavani'},
+  {sl:45,usn:'2GI24IS084',name:'Shrihari Chikkodikar'},
+  {sl:46,usn:'2GI24IS085',name:'Shrilakshmi U Gangadharmath'},
+  {sl:47,usn:'2GI24IS086',name:'Shriom Rai'},
+  {sl:48,usn:'2GI24IS088',name:'SIDDHARAM PATTED'},
+  {sl:49,usn:'2GI24IS090',name:'Sneha A Patil'},
+  {sl:50,usn:'2GI24IS097',name:'Subramanya.S.Kamble'},
+  {sl:51,usn:'2GI24IS098',name:'Suchitra Yallappa Busaraddi'},
+  {sl:52,usn:'2GI24IS099',name:'Sunakshi Thakur'},
+  {sl:53,usn:'2GI24IS102',name:'Swayam Vernekar'},
+  {sl:54,usn:'2GI24IS111',name:'Vedanidhi Namannavar'},
+  {sl:55,usn:'2GI24IS116',name:'Vikasgoud S Sangannavar'},
+  {sl:56,usn:'2GI24IS117',name:'Vinay Turaidar'},
+  {sl:57,usn:'2GI24IS119',name:'Vinod Kodolli'},
+  {sl:58,usn:'2GI24IS122',name:'Rahul R Deshpande'},
+  {sl:59,usn:'2GI25IS400',name:'Aditya Kulam'},
+  {sl:60,usn:'2GI25IS404',name:'Pratiksha Pawar'},
+  {sl:61,usn:'2GI25IS405',name:'Pratiksha Santosh Bakhedi'},
+  {sl:62,usn:'2GI25IS407',name:'Samiksha Badmanji'},
+  {sl:63,usn:'2GI25IS408',name:'Sanchi .S. Undre'},
+  {sl:64,usn:'2GI25IS409',name:'Santosh poojari'},
+  {sl:65,usn:'2GI25IS410',name:'Shivayogi Hugar'},
+  {sl:66,usn:'2GI25IS411',name:'Shreesh Kallapur'},
+  {sl:67,usn:'2GI25IS415',name:'Sumith Sunil Kolekar'},
+  {sl:68,usn:'2GI25IS416',name:'Vaishnavi Ashtekar'},
+  {sl:69,usn:'2GI25IS417',name:'Vedant M Kalkundri'},
+  {sl:70,usn:'GIT25IS403',name:'SUDEEP M VADDAR'},
+  {sl:71,usn:'GIT25IS407',name:'Siddharth daivadnya'},
+  {sl:72,usn:'GIT25IS408',name:'Tejas Kulkarni'},
+  {sl:73,usn:'GIT25IS421',name:'Anmol Murkute'},
+  {sl:74,usn:'GIT25IS422',name:'Prajwal bill'},
+];
+
+// USN lookup map (case-insensitive, strips -T suffix)
+const usnMap = {};
+STUDENTS.forEach(s => {
+  usnMap[s.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'')] = s;
+});
+
+// ══════════════════════════════════════════════════
+// STATE — uses same localStorage key as V1
+// ══════════════════════════════════════════════════
+let sessionActive  = false;
+let sessionToken   = null;
+let sessionDate    = null;
+let sessionPeriod  = null;
+let presentUSNs    = new Set();
+let elapsedInterval = null;
+let elapsedSeconds  = 0;
+
+// Shared with V1 via same key
+let history = JSON.parse(localStorage.getItem('att_history') || '[]');
+
+// ══════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-teacher')    { renderLiveTable(); renderHistory(); }
+  if (id === 'screen-full-table') { renderFullTable(); }
+  if (id === 'screen-student')    { updateStudentView(); }
+}
+function showTeacher() { showScreen('screen-teacher'); }
+function showStudent() { showScreen('screen-student'); }
+
+// ══════════════════════════════════════════════════
+// SESSION TOGGLE — one button, open ↔ close
+// ══════════════════════════════════════════════════
+function toggleSession() {
+  if (!sessionActive) openSession();
+  else closeSession();
+}
+
+function openSession() {
+  const date   = document.getElementById('sess-date').value;
+  const period = document.getElementById('sess-period').value;
+  if (!date) { notify('Please select a date', 'error'); return; }
+
+  const exists = history.find(h => h.date === date && h.period === period);
+  if (exists && !confirm(`A session for ${date} ${period} already exists. Start a new one anyway?`)) return;
+
+  sessionActive = true;
+  sessionDate   = date;
+  sessionPeriod = period;
+  sessionToken  = Math.random().toString(36).substr(2,8).toUpperCase();
+  presentUSNs   = new Set();
+  window._presentTimes = {};
+  elapsedSeconds = 0;
+
+  // Lock date/period while session is open
+  document.getElementById('sess-date').disabled   = true;
+  document.getElementById('sess-period').disabled = true;
+
+  // Update toggle button → red CLOSE button
+  const btn = document.getElementById('toggle-btn');
+  btn.className = 'toggle-btn close-btn';
+  document.getElementById('toggle-icon').textContent  = '■';
+  document.getElementById('toggle-label').textContent = 'Close Attendance';
+
+  updateStatus('open');
+  buildSharePanel();
+  startElapsed();
+  renderLiveTable();
+  notify(`✅ Attendance OPEN · ${date} · ${period}`, 'success');
+}
+
+function closeSession() {
+  if (!sessionActive) return;
+  sessionActive = false;
+
+  clearInterval(elapsedInterval);
+  elapsedInterval = null;
+
+  // Save to history (same format as V1)
+  const records = {};
+  STUDENTS.forEach(s => {
+    records[s.usn] = presentUSNs.has(
+      s.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'')
+    ) ? 'P' : 'A';
+  });
+  const times = { ...window._presentTimes };
+
+  history.unshift({ date: sessionDate, period: sessionPeriod, token: sessionToken, records, times });
+  localStorage.setItem('att_history', JSON.stringify(history));
+
+  // Unlock date/period
+  document.getElementById('sess-date').disabled   = false;
+  document.getElementById('sess-period').disabled = false;
+
+  // Update toggle button → green OPEN button
+  const btn = document.getElementById('toggle-btn');
+  btn.className = 'toggle-btn open-btn';
+  document.getElementById('toggle-icon').textContent  = '▶';
+  document.getElementById('toggle-label').textContent = 'Open Attendance';
+
+  // Hide share panel, show idle
+  document.getElementById('share-panel').style.display = 'none';
+  document.getElementById('share-idle').style.display  = 'block';
+  document.getElementById('elapsed-wrap').style.display = 'none';
+
+  updateStatus('closed');
+  renderHistory();
+  notify(`🔒 Attendance CLOSED & saved · ${presentUSNs.size} present`, 'success');
+}
+
+// ══════════════════════════════════════════════════
+// ELAPSED TIMER (counts UP — no pressure)
+// ══════════════════════════════════════════════════
+function startElapsed() {
+  document.getElementById('elapsed-wrap').style.display = 'block';
+  elapsedInterval = setInterval(() => {
+    elapsedSeconds++;
+    const m = Math.floor(elapsedSeconds / 60).toString().padStart(2,'0');
+    const s = (elapsedSeconds % 60).toString().padStart(2,'0');
+    document.getElementById('elapsed-display').textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+// ══════════════════════════════════════════════════
+// SHARE PANEL
+// ══════════════════════════════════════════════════
+function buildSharePanel() {
+  const url = `${window.location.href.split('?')[0]}?student=1&token=${sessionToken}`;
+  window._currentURL = url;
+
+  const dateFormatted = new Date(sessionDate + 'T00:00:00')
+    .toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+
+  const msg =
+`📚 *ESC – Python Attendance*
+🏫 ISE Dept · 2025–26
+📅 ${dateFormatted} · ${sessionPeriod}
+
+✅ Click the link below to mark your attendance:
+${url}
+
+_Do not share this link outside the class._`;
+
+  window._waMessage = msg;
+
+  document.getElementById('wa-msg-text').textContent = msg;
+  document.getElementById('share-idle').style.display  = 'none';
+  document.getElementById('share-panel').style.display = 'block';
+
+  // QR
+  const qr = document.getElementById('qr-container');
+  qr.innerHTML = '';
+  new QRCode(qr, { text: url, width: 160, height: 160, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.H });
+}
+
+function copyWAMessage() {
+  const txt = window._waMessage || '';
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.getElementById('copy-wa-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    notify('Message copied! Paste it in WhatsApp.', 'success');
+    setTimeout(() => { btn.textContent = orig; }, 2500);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    notify('Message copied!', 'success');
+  });
+}
+
+function openWhatsApp() {
+  window.open(`https://wa.me/?text=${encodeURIComponent(window._waMessage || '')}`, '_blank');
+}
+
+// ══════════════════════════════════════════════════
+// STATUS BADGE
+// ══════════════════════════════════════════════════
+function updateStatus(state) {
+  const el = document.getElementById('sess-status');
+  if (state === 'open') {
+    el.className = 'status-badge open';
+    el.innerHTML = '<span class="dot blink"></span>OPEN — students can submit';
+  } else if (state === 'closed') {
+    el.className = 'status-badge closed';
+    el.innerHTML = '<span class="dot"></span>CLOSED — saved to register';
+  } else {
+    el.className = 'status-badge idle';
+    el.innerHTML = '<span class="dot"></span>Idle — not started';
+  }
+}
+
+// ══════════════════════════════════════════════════
+// STUDENT SUBMISSION
+// ══════════════════════════════════════════════════
+function submitAttendance() {
+  const raw = document.getElementById('usn-input').value.trim().toUpperCase().replace(/-T$/,'').replace(/\s/g,'');
+  if (!raw) { notify('Please enter your USN', 'error'); return; }
+
+  if (!sessionActive) {
+    showResult('error','⛔','Session Closed','The attendance window is not open right now.');
+    return;
+  }
+
+  const student = usnMap[raw];
+  if (!student) {
+    showResult('error','❌','USN Not Found',`"${raw}" is not in the class list. Check and try again.`);
+    return;
+  }
+
+  const key = student.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'');
+  if (presentUSNs.has(key)) {
+    showResult('error','⚠️','Already Marked',`${student.name}, you are already marked present!`);
+    return;
+  }
+
+  presentUSNs.add(key);
+  const timeStr = new Date().toTimeString().substr(0,5);
+  if (!window._presentTimes) window._presentTimes = {};
+  window._presentTimes[key] = timeStr;
+
+  updateCounts();
+  renderLiveTable();
+  showResult('success','✅','Marked Present!',`${student.name} · ${sessionDate} · ${sessionPeriod} · ${timeStr}`);
+  document.getElementById('usn-input').value = '';
+}
+
+function showResult(type, icon, title, msg) {
+  const box = document.getElementById('result-box');
+  box.style.display = 'block';
+  box.className = `result-box ${type}`;
+  document.getElementById('r-icon').textContent  = icon;
+  document.getElementById('r-title').textContent = title;
+  document.getElementById('r-msg').textContent   = msg;
+  setTimeout(() => { box.style.display = 'none'; }, 4500);
+}
+
+function updateStudentView() {
+  const form   = document.getElementById('student-form');
+  const closed = document.getElementById('student-closed-msg');
+  const info   = document.getElementById('student-session-info');
+  if (sessionActive) {
+    form.style.display   = 'block';
+    closed.style.display = 'none';
+    info.style.display   = 'block';
+    document.getElementById('si-date').textContent   = sessionDate;
+    document.getElementById('si-period').textContent = sessionPeriod;
+  } else {
+    form.style.display   = 'none';
+    closed.style.display = 'block';
+    info.style.display   = 'none';
+  }
+}
+
+// ══════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════
+function renderLiveTable(filter = '') {
+  const tbody = document.getElementById('live-tbody');
+  tbody.innerHTML = '';
+  const fl = filter.toLowerCase();
+  STUDENTS.forEach(s => {
+    if (fl && !s.name.toLowerCase().includes(fl) && !s.usn.toLowerCase().includes(fl)) return;
+    const key = s.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'');
+    const isP = presentUSNs.has(key);
+    const time = window._presentTimes?.[key] || '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--muted)">${s.sl}</td>
+      <td><span class="usn-chip">${s.usn}</span></td>
+      <td>${s.name}</td>
+      <td>${isP ? '<span class="badge-p">P</span>' : '<span class="badge-a">A</span>'}</td>
+      <td style="color:var(--muted)">${isP ? time : '—'}</td>`;
+    tbody.appendChild(tr);
+  });
+  updateCounts();
+}
+
+function filterTable(val) { renderLiveTable(val); }
+
+function updateCounts() {
+  document.getElementById('cnt-p').textContent = presentUSNs.size;
+  document.getElementById('cnt-a').textContent = 74 - presentUSNs.size;
+}
+
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if (!history.length) {
+    el.innerHTML = '<div class="empty-state"><div class="e-icon">📭</div>No sessions recorded yet</div>';
+    return;
+  }
+  el.innerHTML = history.map((h, i) => {
+    const p = Object.values(h.records).filter(v => v==='P').length;
+    return `
+      <div class="history-session" onclick="loadHistorySession(${i})">
+        <div>
+          <div class="hs-date">${h.date} · ${h.period}</div>
+          <div class="hs-meta">Token: ${h.token}</div>
+        </div>
+        <div class="hs-stats">
+          <span class="hs-p">✓ ${p} Present</span>
+          <span class="hs-a">✗ ${74 - p} Absent</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function loadHistorySession(i) {
+  const h = history[i];
+  presentUSNs = new Set();
+  window._presentTimes = h.times || {};
+  Object.entries(h.records).forEach(([usn, v]) => {
+    if (v === 'P') presentUSNs.add(usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,''));
+  });
+  sessionDate   = h.date;
+  sessionPeriod = h.period;
+  renderLiveTable();
+  notify(`Viewing: ${h.date} · ${h.period}`, 'success');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderFullTable() {
+  const sessions = history.slice().reverse();
+  let hdr = '<tr><th>#</th><th>USN</th><th>Name</th>';
+  sessions.forEach(h => {
+    hdr += `<th>${h.date.substr(5)}<br><span style="font-weight:400;color:var(--muted)">${h.period}</span></th>`;
+  });
+  hdr += '<th>%</th></tr>';
+  document.getElementById('full-thead').innerHTML = hdr;
+
+  const tbody = document.getElementById('full-tbody');
+  tbody.innerHTML = '';
+  STUDENTS.forEach(s => {
+    let pCount = 0;
+    let row = `<tr><td style="color:var(--muted)">${s.sl}</td><td><span class="usn-chip">${s.usn}</span></td><td>${s.name}</td>`;
+    sessions.forEach(h => {
+      const v = h.records[s.usn] || 'A';
+      if (v === 'P') pCount++;
+      row += `<td>${v==='P' ? '<span class="badge-p">P</span>' : '<span class="badge-a">A</span>'}</td>`;
+    });
+    const pct   = sessions.length ? Math.round((pCount / sessions.length) * 100) : 0;
+    const color = pct >= 75 ? 'var(--green)' : pct >= 60 ? 'var(--yellow)' : 'var(--red)';
+    row += `<td><div class="pct-bar-wrap">
+      <div class="pct-bar"><div class="pct-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <span style="color:${color};font-weight:700;font-size:12px;min-width:38px">${pct}%</span>
+    </div></td></tr>`;
+    tbody.innerHTML += row;
+  });
+}
+
+// ══════════════════════════════════════════════════
+// EXPORT CSV
+// ══════════════════════════════════════════════════
+function exportCSV() {
+  const sessions = history.slice().reverse();
+  let csv = 'Sl.No,USN,Name,' + sessions.map(h => `${h.date} ${h.period}`).join(',') + ',Total Present,Percentage\n';
+  STUDENTS.forEach(s => {
+    let p = 0;
+    const row = sessions.map(h => { const v = h.records[s.usn] || 'A'; if(v==='P')p++; return v; });
+    const pct = sessions.length ? Math.round((p / sessions.length) * 100) : 0;
+    csv += `${s.sl},"${s.usn}","${s.name}",${row.join(',')},${p},${pct}%\n`;
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = `Attendance_ISE_Python_2025-26_${new Date().toISOString().substr(0,10)}.csv`;
+  a.click();
+  notify('CSV exported!', 'success');
+}
+
+// ══════════════════════════════════════════════════
+// NOTIFICATION
+// ══════════════════════════════════════════════════
+function notify(msg, type = 'success') {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = `notif ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('sess-date').value = new Date().toISOString().substr(0,10);
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('student') === '1') showScreen('screen-student');
+  renderHistory();
+});
+</script>
+</body>
+</html>
