@@ -3,27 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ESC Python – Attendance System | ISE Dept</title>
+<title>ESC Python – Attendance | ISE Dept</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
 
   :root {
-    --bg: #0a0a0f;
+    --bg:      #0a0a0f;
     --surface: #12121a;
-    --card: #1a1a26;
-    --border: #2a2a3d;
-    --accent: #00e5ff;
-    --green: #00ff9d;
-    --red: #ff4466;
-    --yellow: #ffd60a;
-    --text: #e8e8f0;
-    --muted: #6b6b8a;
+    --card:    #1a1a26;
+    --border:  #2a2a3d;
+    --accent:  #00e5ff;
+    --green:   #00ff9d;
+    --red:     #ff4466;
+    --yellow:  #ffd60a;
+    --text:    #e8e8f0;
+    --muted:   #6b6b8a;
     --font-head: 'Syne', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin:0; padding:0; box-sizing:border-box; }
 
   body {
     background: var(--bg);
@@ -34,314 +34,361 @@
   }
 
   body::before {
-    content: '';
-    position: fixed; inset: 0;
+    content:''; position:fixed; inset:0;
     background-image:
       linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);
     background-size: 40px 40px;
-    pointer-events: none; z-index: 0;
+    pointer-events:none; z-index:0;
   }
 
-  .screen { display: none; position: relative; z-index: 1; }
-  .screen.active { display: block; }
+  .screen { display:none; position:relative; z-index:1; }
+  .screen.active { display:block; }
 
-  /* ── LOGIN ── */
-  #screen-login {
-    min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 48px; padding: 24px;
+  /* ── CENTRED SCREENS ── */
+  .centered-screen {
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:32px; padding:24px;
   }
 
-  .logo-area { text-align: center; }
-  .logo-area .dept { font-size: 11px; letter-spacing: 4px; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; }
-  .logo-area h1 { font-family: var(--font-head); font-size: clamp(28px,5vw,48px); font-weight: 800; line-height: 1.1; }
-  .logo-area h1 span { color: var(--accent); }
-  .logo-area .sub { font-size: 12px; color: var(--muted); margin-top: 8px; letter-spacing: 2px; }
-  .logo-area .v-badge {
-    display: inline-block; margin-top: 12px;
-    background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.3);
-    color: var(--accent); font-size: 10px; letter-spacing: 2px;
-    padding: 4px 12px; border-radius: 20px;
+  /* ── LOGO ── */
+  .logo-area { text-align:center; }
+  .logo-area .dept { font-size:11px; letter-spacing:4px; color:var(--accent); text-transform:uppercase; margin-bottom:12px; }
+  .logo-area h1 { font-family:var(--font-head); font-size:clamp(28px,5vw,48px); font-weight:800; line-height:1.1; }
+  .logo-area h1 span { color:var(--accent); }
+  .logo-area .sub { font-size:12px; color:var(--muted); margin-top:8px; letter-spacing:2px; }
+  .v-badge {
+    display:inline-block; margin-top:12px;
+    background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.3);
+    color:var(--accent); font-size:10px; letter-spacing:2px;
+    padding:4px 12px; border-radius:20px;
   }
 
-  .login-cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-
+  /* ── LOGIN CARDS ── */
+  .login-cards { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
   .login-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 32px 40px;
-    cursor: pointer; transition: all 0.3s ease;
-    text-align: center; min-width: 180px;
-    position: relative; overflow: hidden;
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:32px 40px;
+    cursor:pointer; transition:all 0.3s ease;
+    text-align:center; min-width:180px;
+    position:relative; overflow:hidden;
   }
   .login-card::before { content:''; position:absolute; inset:0; opacity:0; transition:opacity 0.3s; }
-  .login-card.teacher::before { background: radial-gradient(circle at 50% 0%, rgba(0,229,255,0.15), transparent 70%); }
-  .login-card.student::before { background: radial-gradient(circle at 50% 0%, rgba(0,255,157,0.15), transparent 70%); }
-  .login-card:hover { transform: translateY(-4px); border-color: var(--accent); }
-  .login-card:hover::before { opacity: 1; }
-  .login-card.student:hover { border-color: var(--green); }
-  .login-card .icon { font-size: 40px; margin-bottom: 12px; }
-  .login-card h3 { font-family: var(--font-head); font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-  .login-card p { font-size: 11px; color: var(--muted); }
+  .login-card.teacher::before { background:radial-gradient(circle at 50% 0%,rgba(0,229,255,0.15),transparent 70%); }
+  .login-card.student::before { background:radial-gradient(circle at 50% 0%,rgba(0,255,157,0.15),transparent 70%); }
+  .login-card:hover { transform:translateY(-4px); border-color:var(--accent); }
+  .login-card:hover::before { opacity:1; }
+  .login-card.student:hover { border-color:var(--green); }
+  .login-card .icon { font-size:40px; margin-bottom:12px; }
+  .login-card h3 { font-family:var(--font-head); font-size:18px; font-weight:700; margin-bottom:6px; }
+  .login-card p { font-size:11px; color:var(--muted); }
 
-  /* ── COMMON ── */
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 32px; padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap; gap: 12px;
+  /* ── PIN MODAL ── */
+  .modal-overlay {
+    position:fixed; inset:0; z-index:100;
+    background:rgba(0,0,0,0.8); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center; padding:24px;
   }
-  .topbar h2 { font-family: var(--font-head); font-size: 22px; font-weight: 800; }
-  .topbar h2 span { color: var(--accent); }
+  .modal-overlay.hidden { display:none; }
+  .modal-box {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:20px; padding:40px 32px;
+    max-width:360px; width:100%; text-align:center;
+  }
+  .modal-box h3 { font-family:var(--font-head); font-size:22px; font-weight:800; margin-bottom:6px; }
+  .modal-box p { font-size:12px; color:var(--muted); margin-bottom:28px; }
+  .pin-dots { display:flex; gap:12px; justify-content:center; margin-bottom:24px; }
+  .pin-dot {
+    width:16px; height:16px; border-radius:50%;
+    border:2px solid var(--border); background:transparent;
+    transition:all 0.2s;
+  }
+  .pin-dot.filled { background:var(--accent); border-color:var(--accent); }
+  .pin-dot.error  { background:var(--red);    border-color:var(--red); animation:shake 0.3s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .pin-grid {
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:10px; margin-bottom:16px;
+  }
+  .pin-key {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:16px;
+    font-family:var(--font-head); font-size:20px; font-weight:700;
+    color:var(--text); cursor:pointer; transition:all 0.15s;
+    user-select:none;
+  }
+  .pin-key:hover { background:var(--accent); color:#000; border-color:var(--accent); transform:scale(1.05); }
+  .pin-key:active { transform:scale(0.97); }
+  .pin-key.del { font-size:16px; color:var(--muted); }
+  .pin-key.del:hover { background:var(--red); color:#fff; border-color:var(--red); }
+  .pin-error-msg { font-size:12px; color:var(--red); min-height:18px; margin-top:4px; }
+  .modal-cancel { font-size:12px; color:var(--muted); cursor:pointer; margin-top:12px; text-decoration:underline; }
+  .modal-cancel:hover { color:var(--text); }
+
+  /* ── COMMON UI ── */
+  .topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:32px; padding-bottom:16px;
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap; gap:12px;
+  }
+  .topbar h2 { font-family:var(--font-head); font-size:22px; font-weight:800; }
+  .topbar h2 span { color:var(--accent); }
 
   .btn {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    letter-spacing: 1px; padding: 10px 20px;
-    border: none; border-radius: 8px; cursor: pointer;
-    transition: all 0.2s; text-transform: uppercase;
+    font-family:var(--font-mono); font-size:12px; font-weight:600;
+    letter-spacing:1px; padding:10px 20px;
+    border:none; border-radius:8px; cursor:pointer;
+    transition:all 0.2s; text-transform:uppercase;
   }
-  .btn-green  { background: var(--green);  color: #000; }
-  .btn-green:hover  { background: #33ffb0; transform: translateY(-1px); }
-  .btn-red    { background: var(--red);    color: #fff; }
-  .btn-red:hover    { background: #ff6680; transform: translateY(-1px); }
-  .btn-ghost  { background: transparent;  color: var(--text); border: 1px solid var(--border); }
-  .btn-ghost:hover  { border-color: var(--accent); color: var(--accent); }
-  .btn-yellow { background: var(--yellow); color: #000; }
-  .btn-yellow:hover { background: #ffe033; }
-  .btn-accent { background: var(--accent); color: #000; }
-  .btn-accent:hover { background: #33eeff; transform: translateY(-1px); }
+  .btn-ghost  { background:transparent; color:var(--text); border:1px solid var(--border); }
+  .btn-ghost:hover  { border-color:var(--accent); color:var(--accent); }
+  .btn-yellow { background:var(--yellow); color:#000; }
+  .btn-yellow:hover { background:#ffe033; }
+  .btn-accent { background:var(--accent); color:#000; }
+  .btn-accent:hover { background:#33eeff; }
 
-  /* Big open/close toggle */
   .toggle-btn {
-    width: 100%; padding: 18px;
-    font-family: var(--font-head); font-size: 18px; font-weight: 800;
-    border: none; border-radius: 14px; cursor: pointer;
-    transition: all 0.25s; letter-spacing: 1px;
-    display: flex; align-items: center; justify-content: center; gap: 12px;
+    width:100%; padding:18px;
+    font-family:var(--font-head); font-size:18px; font-weight:800;
+    border:none; border-radius:14px; cursor:pointer;
+    transition:all 0.25s; letter-spacing:1px;
+    display:flex; align-items:center; justify-content:center; gap:12px;
   }
-  .toggle-btn.open-btn  { background: var(--green); color: #000; box-shadow: 0 0 30px rgba(0,255,157,0.25); }
-  .toggle-btn.open-btn:hover  { background: #33ffb0; box-shadow: 0 0 40px rgba(0,255,157,0.4); transform: translateY(-2px); }
-  .toggle-btn.close-btn { background: var(--red);   color: #fff; box-shadow: 0 0 30px rgba(255,68,102,0.25); }
-  .toggle-btn.close-btn:hover { background: #ff6680; box-shadow: 0 0 40px rgba(255,68,102,0.4); transform: translateY(-2px); }
+  .toggle-btn.open-btn  { background:var(--green); color:#000; box-shadow:0 0 30px rgba(0,255,157,0.25); }
+  .toggle-btn.open-btn:hover  { background:#33ffb0; box-shadow:0 0 40px rgba(0,255,157,0.4); transform:translateY(-2px); }
+  .toggle-btn.close-btn { background:var(--red);   color:#fff; box-shadow:0 0 30px rgba(255,68,102,0.25); }
+  .toggle-btn.close-btn:hover { background:#ff6680; box-shadow:0 0 40px rgba(255,68,102,0.4); transform:translateY(-2px); }
 
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media(max-width:700px) { .grid-2 { grid-template-columns: 1fr; } }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media(max-width:700px){ .grid-2 { grid-template-columns:1fr; } }
 
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; }
+  .card-title { font-family:var(--font-head); font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:20px; }
 
-  .card-title {
-    font-family: var(--font-head); font-size: 13px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 20px;
-  }
-
-  .field { margin-bottom: 16px; }
+  .field { margin-bottom:16px; }
   .field label { display:block; font-size:11px; color:var(--muted); letter-spacing:1px; margin-bottom:6px; text-transform:uppercase; }
   .field input, .field select {
-    width: 100%; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 14px; color: var(--text);
-    font-family: var(--font-mono); font-size: 13px; outline: none; transition: border-color 0.2s;
+    width:100%; background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; padding:10px 14px; color:var(--text);
+    font-family:var(--font-mono); font-size:13px; outline:none; transition:border-color 0.2s;
   }
-  .field input:focus, .field select:focus { border-color: var(--accent); }
-  .field select option { background: var(--surface); }
-  .field input:disabled, .field select:disabled { opacity: 0.45; cursor: not-allowed; }
+  .field input:focus, .field select:focus { border-color:var(--accent); }
+  .field select option { background:var(--surface); }
+  .field input:disabled, .field select:disabled { opacity:0.45; cursor:not-allowed; }
 
-  /* Status badge */
   .status-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 8px 18px; border-radius: 20px;
-    font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:8px 18px; border-radius:20px;
+    font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
   }
-  .status-badge.open   { background: rgba(0,255,157,0.15); color: var(--green); border: 1px solid rgba(0,255,157,0.3); }
-  .status-badge.closed { background: rgba(255,68,102,0.15); color: var(--red);   border: 1px solid rgba(255,68,102,0.3); }
-  .status-badge.idle   { background: rgba(107,107,138,0.2); color: var(--muted); border: 1px solid var(--border); }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-  .dot.blink { animation: blink 1s infinite; }
+  .status-badge.open   { background:rgba(0,255,157,0.15); color:var(--green); border:1px solid rgba(0,255,157,0.3); }
+  .status-badge.closed { background:rgba(255,68,102,0.15); color:var(--red);   border:1px solid rgba(255,68,102,0.3); }
+  .status-badge.idle   { background:rgba(107,107,138,0.2); color:var(--muted); border:1px solid var(--border); }
+  .dot { width:7px; height:7px; border-radius:50%; background:currentColor; }
+  .dot.blink { animation:blink 1s infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
   /* Share panel */
-  .qr-area { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
-
+  .qr-area { display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; }
   .share-idle { text-align:center; padding:24px 0; color:var(--muted); }
-  .share-idle .si-icon { font-size: 40px; margin-bottom: 10px; }
-  .share-idle p { font-size: 12px; line-height: 1.7; }
+  .share-idle .si-icon { font-size:40px; margin-bottom:10px; }
+  .share-idle p { font-size:12px; line-height:1.7; }
+  .wa-box { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; width:100%; }
+  .wa-box-label { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+  .wa-msg { font-size:12px; line-height:1.8; color:var(--text); white-space:pre-wrap; word-break:break-all; }
+  .share-actions { display:flex; gap:8px; width:100%; flex-wrap:wrap; }
 
-  .wa-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px; width: 100%;
-  }
-  .wa-box-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
-  .wa-msg { font-size: 12px; line-height: 1.8; color: var(--text); white-space: pre-wrap; word-break: break-all; }
+  /* Count pills */
+  .live-count { display:flex; gap:12px; flex-wrap:wrap; width:100%; }
+  .count-pill { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 16px; text-align:center; flex:1; min-width:70px; }
+  .count-pill .num { font-family:var(--font-head); font-size:28px; font-weight:800; line-height:1; }
+  .count-pill .lbl { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-top:4px; }
+  .count-pill.present .num { color:var(--green); }
+  .count-pill.absent  .num { color:var(--red); }
+  .count-pill.total   .num { color:var(--accent); }
 
-  .share-actions { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
-  .share-actions .btn { flex: 1; min-width: 120px; }
+  /* Elapsed */
+  .elapsed { font-family:var(--font-head); font-size:36px; font-weight:800; color:var(--accent); letter-spacing:-1px; line-height:1; text-align:center; }
+  .elapsed-label { font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; text-align:center; margin-top:4px; }
 
-  /* Live count pills */
-  .live-count { display: flex; gap: 12px; flex-wrap: wrap; width: 100%; }
-  .count-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; text-align: center; flex: 1; min-width: 70px; }
-  .count-pill .num { font-family: var(--font-head); font-size: 28px; font-weight: 800; line-height: 1; }
-  .count-pill .lbl { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
-  .count-pill.present .num { color: var(--green); }
-  .count-pill.absent  .num { color: var(--red); }
-  .count-pill.total   .num { color: var(--accent); }
-
-  /* Attendance table */
-  .att-table-wrap { overflow-x: auto; max-height: 420px; overflow-y: auto; margin-top: 12px; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th { background: var(--surface); padding: 10px 12px; text-align: left; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); position: sticky; top: 0; z-index: 2; }
-  td { padding: 9px 12px; border-bottom: 1px solid rgba(42,42,61,0.5); vertical-align: middle; }
-  tr:hover td { background: rgba(0,229,255,0.03); }
+  /* Table */
+  .att-table-wrap { overflow-x:auto; max-height:420px; overflow-y:auto; margin-top:12px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { background:var(--surface); padding:10px 12px; text-align:left; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); position:sticky; top:0; z-index:2; }
+  td { padding:9px 12px; border-bottom:1px solid rgba(42,42,61,0.5); vertical-align:middle; }
+  tr:hover td { background:rgba(0,229,255,0.03); }
   .badge-p { display:inline-block; background:rgba(0,255,157,0.15); color:var(--green); border:1px solid rgba(0,255,157,0.3); border-radius:4px; padding:2px 8px; font-size:10px; font-weight:700; }
   .badge-a { display:inline-block; background:rgba(255,68,102,0.15); color:var(--red);   border:1px solid rgba(255,68,102,0.3); border-radius:4px; padding:2px 8px; font-size:10px; font-weight:700; }
   .usn-chip { font-size:10px; color:var(--muted); background:var(--surface); padding:2px 6px; border-radius:4px; }
 
-  /* Past sessions */
+  /* History */
   .history-session {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 18px; margin-bottom: 10px;
-    display: flex; justify-content: space-between; align-items: center;
-    flex-wrap: wrap; gap: 10px; cursor: pointer; transition: border-color 0.2s;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:14px 18px; margin-bottom:10px;
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:10px; cursor:pointer; transition:border-color 0.2s;
   }
-  .history-session:hover { border-color: var(--accent); }
-  .hs-date { font-size: 13px; font-weight: 600; }
-  .hs-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .hs-stats { display: flex; gap: 12px; font-size: 12px; }
-  .hs-p { color: var(--green); font-weight: 700; }
-  .hs-a { color: var(--red); font-weight: 700; }
+  .history-session:hover { border-color:var(--accent); }
+  .hs-date { font-size:13px; font-weight:600; }
+  .hs-meta { font-size:11px; color:var(--muted); margin-top:2px; }
+  .hs-stats { display:flex; gap:12px; font-size:12px; }
+  .hs-p { color:var(--green); font-weight:700; }
+  .hs-a { color:var(--red);   font-weight:700; }
 
   /* Student screen */
-  #screen-student {
-    min-height: 100vh; display: flex;
-    align-items: center; justify-content: center; padding: 24px;
-  }
   .student-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 20px; padding: 40px 32px;
-    max-width: 420px; width: 100%; text-align: center;
+    background:var(--card); border:1px solid var(--border);
+    border-radius:20px; padding:40px 32px;
+    max-width:420px; width:100%; text-align:center;
   }
-  .student-card h2 { font-family: var(--font-head); font-size: 24px; font-weight: 800; margin-bottom: 6px; }
-  .student-card .sub { font-size: 11px; color: var(--muted); margin-bottom: 28px; letter-spacing: 1px; }
+  .student-card h2 { font-family:var(--font-head); font-size:24px; font-weight:800; margin-bottom:6px; }
+  .student-card .sub { font-size:11px; color:var(--muted); margin-bottom:28px; letter-spacing:1px; }
 
   .session-info-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;
-    font-size: 12px; color: var(--muted); text-align: left;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:14px 18px; margin-bottom:20px;
+    font-size:12px; color:var(--muted); text-align:left; line-height:1.8;
   }
-  .session-info-box strong { color: var(--text); }
+  .session-info-box strong { color:var(--text); }
 
   .big-input {
-    width: 100%; background: var(--surface); border: 2px solid var(--border);
-    border-radius: 12px; padding: 16px; color: var(--text);
-    font-family: var(--font-mono); font-size: 16px; font-weight: 600;
-    text-align: center; letter-spacing: 2px; outline: none;
-    transition: border-color 0.2s; margin-bottom: 14px; text-transform: uppercase;
+    width:100%; background:var(--surface); border:2px solid var(--border);
+    border-radius:12px; padding:16px; color:var(--text);
+    font-family:var(--font-mono); font-size:16px; font-weight:600;
+    text-align:center; letter-spacing:2px; outline:none;
+    transition:border-color 0.2s; margin-bottom:14px; text-transform:uppercase;
   }
-  .big-input:focus { border-color: var(--green); }
+  .big-input:focus { border-color:var(--green); }
 
   .submit-btn {
-    width: 100%; padding: 16px; font-family: var(--font-head);
-    font-size: 16px; font-weight: 700; background: var(--green);
-    color: #000; border: none; border-radius: 12px; cursor: pointer;
-    transition: all 0.2s; letter-spacing: 1px;
+    width:100%; padding:16px; font-family:var(--font-head);
+    font-size:16px; font-weight:700; background:var(--green);
+    color:#000; border:none; border-radius:12px; cursor:pointer;
+    transition:all 0.2s; letter-spacing:1px;
   }
-  .submit-btn:hover { background: #33ffb0; transform: translateY(-2px); }
-  .submit-btn:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
+  .submit-btn:hover { background:#33ffb0; transform:translateY(-2px); }
 
-  .result-box { border-radius: 12px; padding: 20px; margin-top: 16px; display: none; }
-  .result-box.success { background: rgba(0,255,157,0.1); border: 1px solid rgba(0,255,157,0.3); }
-  .result-box.error   { background: rgba(255,68,102,0.1); border: 1px solid rgba(255,68,102,0.3); }
-  .result-box .icon { font-size: 32px; margin-bottom: 8px; }
-  .result-box h3 { font-family: var(--font-head); font-size: 18px; font-weight: 700; }
-  .result-box p { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .result-box { border-radius:12px; padding:20px; margin-top:16px; display:none; }
+  .result-box.success { background:rgba(0,255,157,0.1); border:1px solid rgba(0,255,157,0.3); }
+  .result-box.error   { background:rgba(255,68,102,0.1); border:1px solid rgba(255,68,102,0.3); }
+  .result-box .icon { font-size:32px; margin-bottom:8px; }
+  .result-box h3 { font-family:var(--font-head); font-size:18px; font-weight:700; }
+  .result-box p  { font-size:12px; color:var(--muted); margin-top:6px; }
 
-  .closed-msg {
-    background: rgba(255,68,102,0.1); border: 1px solid rgba(255,68,102,0.3);
-    border-radius: 12px; padding: 20px; margin-bottom: 20px;
-    color: var(--red); font-size: 14px;
+  .closed-box {
+    background:rgba(255,68,102,0.1); border:1px solid rgba(255,68,102,0.3);
+    border-radius:12px; padding:24px; text-align:center;
   }
+  .closed-box .icon { font-size:36px; margin-bottom:10px; }
+  .closed-box h3 { font-family:var(--font-head); font-size:18px; font-weight:700; color:var(--red); }
+  .closed-box p  { font-size:12px; color:var(--muted); margin-top:6px; line-height:1.7; }
 
   /* Full register */
-  .pct-bar-wrap { display: flex; align-items: center; gap: 8px; }
-  .pct-bar { height: 4px; background: var(--border); border-radius: 2px; flex: 1; min-width: 60px; }
-  .pct-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+  .pct-bar-wrap { display:flex; align-items:center; gap:8px; }
+  .pct-bar { height:4px; background:var(--border); border-radius:2px; flex:1; min-width:60px; }
+  .pct-bar-fill { height:100%; border-radius:2px; transition:width 0.4s; }
 
   /* Misc */
   .search-input {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; padding: 8px 12px; color: var(--text);
-    font-family: var(--font-mono); font-size: 12px; outline: none;
-    width: 200px; transition: border-color 0.2s;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; padding:8px 12px; color:var(--text);
+    font-family:var(--font-mono); font-size:12px; outline:none;
+    width:200px; transition:border-color 0.2s;
   }
-  .search-input:focus { border-color: var(--accent); }
-
+  .search-input:focus { border-color:var(--accent); }
   .empty-state { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
   .empty-state .e-icon { font-size:40px; margin-bottom:12px; }
-
-  .flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .section-gap { margin-bottom: 20px; }
+  .flex-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .section-gap { margin-bottom:20px; }
 
   .notif {
-    position: fixed; bottom: 24px; right: 24px;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px 20px; font-size: 13px;
-    z-index: 9999; transform: translateY(80px); opacity: 0;
-    transition: all 0.3s ease; max-width: 320px;
+    position:fixed; bottom:24px; right:24px;
+    background:var(--card); border:1px solid var(--border);
+    border-radius:10px; padding:14px 20px; font-size:13px;
+    z-index:9999; transform:translateY(80px); opacity:0;
+    transition:all 0.3s ease; max-width:320px;
   }
-  .notif.show { transform: translateY(0); opacity: 1; }
-  .notif.success { border-color: var(--green); color: var(--green); }
-  .notif.error   { border-color: var(--red);   color: var(--red); }
+  .notif.show { transform:translateY(0); opacity:1; }
+  .notif.success { border-color:var(--green); color:var(--green); }
+  .notif.error   { border-color:var(--red);   color:var(--red); }
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--surface); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  /* Elapsed time display */
-  .elapsed {
-    font-family: var(--font-head); font-size: 36px; font-weight: 800;
-    color: var(--accent); letter-spacing: -1px; line-height: 1;
-    text-align: center;
-  }
-  .elapsed-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; text-align: center; margin-top: 4px; }
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:var(--surface); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════ LOGIN ══ -->
-<div id="screen-login" class="screen active">
-  <div class="logo-area">
-    <div class="dept">ISE Dept · GIT College</div>
-    <h1>Attendance<br><span>System</span></h1>
-    <div class="sub">ESC – Python Programming · 2025–26</div>
-    <div class="v-badge">VERSION 2 — MANUAL CONTROL</div>
-  </div>
-  <div class="login-cards">
-    <div class="login-card teacher" onclick="showTeacher()">
-      <div class="icon">👨‍🏫</div>
-      <h3>Professor</h3>
-      <p>Manage sessions & records</p>
+<!-- ══════════ PIN MODAL ══════════ -->
+<div class="modal-overlay hidden" id="pin-modal">
+  <div class="modal-box">
+    <div style="font-size:36px;margin-bottom:10px;">🔐</div>
+    <h3>Professor Login</h3>
+    <p>Enter your 4-digit PIN to continue</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
     </div>
-    <div class="login-card student" onclick="showStudent()">
-      <div class="icon">🎓</div>
-      <h3>Student</h3>
-      <p>Mark your attendance</p>
+    <div class="pin-grid">
+      <div class="pin-key" onclick="pinKey('1')">1</div>
+      <div class="pin-key" onclick="pinKey('2')">2</div>
+      <div class="pin-key" onclick="pinKey('3')">3</div>
+      <div class="pin-key" onclick="pinKey('4')">4</div>
+      <div class="pin-key" onclick="pinKey('5')">5</div>
+      <div class="pin-key" onclick="pinKey('6')">6</div>
+      <div class="pin-key" onclick="pinKey('7')">7</div>
+      <div class="pin-key" onclick="pinKey('8')">8</div>
+      <div class="pin-key" onclick="pinKey('9')">9</div>
+      <div class="pin-key del" onclick="pinDel()">⌫</div>
+      <div class="pin-key" onclick="pinKey('0')">0</div>
+      <div class="pin-key del" onclick="pinClear()">✕</div>
+    </div>
+    <div class="pin-error-msg" id="pin-error"></div>
+    <div class="modal-cancel" onclick="closePin()">Cancel</div>
+  </div>
+</div>
+
+<!-- ══════════ LOGIN SCREEN ══════════ -->
+<div id="screen-login" class="screen active">
+  <div class="centered-screen">
+    <div class="logo-area">
+      <div class="dept">ISE Dept · GIT College</div>
+      <h1>Attendance<br><span>System</span></h1>
+      <div class="sub">ESC – Python Programming · 2025–26</div>
+      <div class="v-badge">VERSION 3 — SECURE</div>
+    </div>
+    <div class="login-cards">
+      <div class="login-card teacher" onclick="askPin()">
+        <div class="icon">👨‍🏫</div>
+        <h3>Professor</h3>
+        <p>PIN protected</p>
+      </div>
+      <div class="login-card student" onclick="showStudent()">
+        <div class="icon">🎓</div>
+        <h3>Student</h3>
+        <p>Mark your attendance</p>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════ TEACHER ══ -->
+<!-- ══════════ TEACHER SCREEN ══════════ -->
 <div id="screen-teacher" class="screen">
   <div style="padding:24px;max-width:1100px;margin:0 auto;">
     <div class="topbar">
-      <h2>Professor <span>Dashboard</span> <span style="font-size:13px;color:var(--muted);font-weight:400;">v2</span></h2>
+      <h2>Professor <span>Dashboard</span> <span style="font-size:13px;color:var(--muted);font-weight:400;">v3</span></h2>
       <div class="flex-row">
         <button class="btn btn-ghost" onclick="showScreen('screen-full-table')">📊 Full Register</button>
         <button class="btn btn-yellow" onclick="exportCSV()">⬇ Export CSV</button>
-        <button class="btn btn-ghost" onclick="showScreen('screen-login')">← Back</button>
+        <button class="btn btn-ghost" onclick="logoutTeacher()">🔒 Logout</button>
       </div>
     </div>
 
     <div class="grid-2 section-gap">
-
       <!-- Session Setup -->
       <div class="card">
         <div class="card-title">📅 Session Setup</div>
@@ -361,10 +408,9 @@
             <option value="Lab">Lab Session</option>
           </select>
         </div>
+        <div style="height:12px;"></div>
 
-        <div style="height:16px;"></div>
-
-        <!-- THE BIG TOGGLE BUTTON -->
+        <!-- BIG TOGGLE BUTTON -->
         <button class="toggle-btn open-btn" id="toggle-btn" onclick="toggleSession()">
           <span id="toggle-icon">▶</span>
           <span id="toggle-label">Open Attendance</span>
@@ -374,7 +420,7 @@
           <span id="sess-status" class="status-badge idle"><span class="dot"></span>Idle — not started</span>
         </div>
 
-        <!-- Elapsed time (visible when open) -->
+        <!-- Elapsed (counts up — no pressure) -->
         <div id="elapsed-wrap" style="display:none;margin-top:16px;">
           <div class="elapsed" id="elapsed-display">00:00</div>
           <div class="elapsed-label">Session open for</div>
@@ -385,22 +431,18 @@
       <div class="card">
         <div class="card-title">📲 Share with Students</div>
         <div class="qr-area">
-
-          <!-- Idle -->
           <div class="share-idle" id="share-idle">
             <div class="si-icon">💬</div>
             <p>Open attendance to get<br>a WhatsApp-ready message</p>
           </div>
-
-          <!-- Active -->
           <div id="share-panel" style="display:none;width:100%;">
             <div class="wa-box" style="margin-bottom:12px;">
               <div class="wa-box-label">📋 WhatsApp Message — copy & paste</div>
               <div class="wa-msg" id="wa-msg-text"></div>
             </div>
             <div class="share-actions" style="margin-bottom:12px;">
-              <button class="btn btn-green share-actions" id="copy-wa-btn" onclick="copyWAMessage()" style="flex:1;">📋 Copy Message</button>
-              <button class="btn btn-accent" onclick="openWhatsApp()" style="flex:1;">📱 Open WhatsApp</button>
+              <button class="btn btn-accent" id="copy-wa-btn" onclick="copyWAMessage()" style="flex:1;">📋 Copy Message</button>
+              <button class="btn" style="background:#25D366;color:#fff;flex:1;" onclick="openWhatsApp()">📱 WhatsApp</button>
             </div>
             <details>
               <summary style="font-size:11px;color:var(--muted);cursor:pointer;letter-spacing:1px;text-transform:uppercase;padding:6px 0;">▶ Also show QR (for projector)</summary>
@@ -409,14 +451,11 @@
               </div>
             </details>
           </div>
-
-          <!-- Live count — always visible -->
           <div class="live-count">
             <div class="count-pill present"><div class="num" id="cnt-p">0</div><div class="lbl">Present</div></div>
             <div class="count-pill absent"><div class="num" id="cnt-a">74</div><div class="lbl">Absent</div></div>
             <div class="count-pill total"><div class="num">74</div><div class="lbl">Total</div></div>
           </div>
-
         </div>
       </div>
     </div>
@@ -429,9 +468,7 @@
       </div>
       <div class="att-table-wrap">
         <table>
-          <thead>
-            <tr><th>#</th><th>USN</th><th>Name</th><th>Status</th><th>Time</th></tr>
-          </thead>
+          <thead><tr><th>#</th><th>USN</th><th>Name</th><th>Status</th><th>Time</th></tr></thead>
           <tbody id="live-tbody"></tbody>
         </table>
       </div>
@@ -440,40 +477,44 @@
     <!-- Past Sessions -->
     <div class="card">
       <div class="card-title">🗂 Past Sessions</div>
-      <div id="history-list">
-        <div class="empty-state"><div class="e-icon">📭</div>No sessions yet</div>
-      </div>
+      <div id="history-list"><div class="empty-state"><div class="e-icon">📭</div>No sessions yet</div></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════ STUDENT ══ -->
+<!-- ══════════ STUDENT SCREEN ══════════ -->
 <div id="screen-student" class="screen">
-  <div id="student-wrap" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div class="centered-screen">
     <div class="student-card">
       <h2>Mark Attendance</h2>
       <div class="sub">ESC – PYTHON · ISE DEPT · 2025–26</div>
 
-      <div id="student-session-info" class="session-info-box" style="display:none;">
-        <strong id="si-date">—</strong><br>
-        <span id="si-period">—</span> &nbsp;·&nbsp;
-        <span style="color:var(--green);font-weight:600;">🟢 Open</span>
-      </div>
-
-      <div id="student-closed-msg" class="closed-msg" style="display:none;">
-        ⛔ Attendance window is <strong>closed</strong>.<br>
-        <span style="font-size:11px;color:var(--muted);">Ask your professor to open it.</span>
-      </div>
-
-      <div id="student-form">
-        <input class="big-input" type="text" id="usn-input" placeholder="Enter your USN" autocomplete="off" spellcheck="false">
+      <!-- Valid token → show form -->
+      <div id="student-valid" style="display:none;">
+        <div class="session-info-box" id="student-session-info">
+          <strong id="si-date">—</strong><br>
+          <span id="si-period">—</span><br>
+          <span style="color:var(--green);font-weight:600;">🟢 Attendance is Open</span>
+        </div>
+        <input class="big-input" type="text" id="usn-input"
+          placeholder="Enter your USN"
+          autocomplete="off" spellcheck="false"
+          onkeydown="if(event.key==='Enter') submitAttendance()">
         <button class="submit-btn" onclick="submitAttendance()">Mark Present ✓</button>
+        <div id="result-box" class="result-box">
+          <div class="icon" id="r-icon">✅</div>
+          <h3 id="r-title"></h3>
+          <p id="r-msg"></p>
+        </div>
       </div>
 
-      <div id="result-box" class="result-box">
-        <div class="icon" id="r-icon">✅</div>
-        <h3 id="r-title">Marked Present!</h3>
-        <p id="r-msg"></p>
+      <!-- No valid token → closed message -->
+      <div id="student-closed" style="display:none;">
+        <div class="closed-box">
+          <div class="icon">⛔</div>
+          <h3>Not Open Yet</h3>
+          <p>Your professor hasn't shared the attendance link yet.<br>Wait for the WhatsApp message and click that link directly.</p>
+        </div>
       </div>
 
       <div style="margin-top:20px;">
@@ -483,7 +524,7 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════ FULL REGISTER ══ -->
+<!-- ══════════ FULL REGISTER ══════════ -->
 <div id="screen-full-table" class="screen">
   <div style="padding:24px;max-width:1200px;margin:0 auto;">
     <div class="topbar">
@@ -504,23 +545,27 @@
   </div>
 </div>
 
-<!-- Notification -->
 <div class="notif" id="notif"></div>
 
 <script>
 // ══════════════════════════════════════════════════
-// STUDENT DATABASE — 74 students, ISE dept
+// CONFIG — change PIN here
+// ══════════════════════════════════════════════════
+const PROFESSOR_PIN = '0000'; // ← Change this to your preferred 4-digit PIN
+
+// ══════════════════════════════════════════════════
+// STUDENTS
 // ══════════════════════════════════════════════════
 const STUDENTS = [
-  {sl:1,usn:'2GI23IS103',name:'Sridhar B Awajjigol'},
-  {sl:2,usn:'2GI23IS111',name:'Tanishq Mj'},
-  {sl:3,usn:'2GI24IS002',name:'Aditya Malli'},
-  {sl:4,usn:'2GI24IS003',name:'Aditya M Medar'},
-  {sl:5,usn:'2GI24IS004',name:'Aditya Morab'},
-  {sl:6,usn:'2GI24IS006',name:'Akul R Sanu'},
-  {sl:7,usn:'2GI24IS010',name:'Ankita Santosh Chinti'},
-  {sl:8,usn:'2GI24IS011',name:'Anshul'},
-  {sl:9,usn:'2GI24IS012',name:'Anuragh K Talawar'},
+  {sl:1, usn:'2GI23IS103',name:'Sridhar B Awajjigol'},
+  {sl:2, usn:'2GI23IS111',name:'Tanishq Mj'},
+  {sl:3, usn:'2GI24IS002',name:'Aditya Malli'},
+  {sl:4, usn:'2GI24IS003',name:'Aditya M Medar'},
+  {sl:5, usn:'2GI24IS004',name:'Aditya Morab'},
+  {sl:6, usn:'2GI24IS006',name:'Akul R Sanu'},
+  {sl:7, usn:'2GI24IS010',name:'Ankita Santosh Chinti'},
+  {sl:8, usn:'2GI24IS011',name:'Anshul'},
+  {sl:9, usn:'2GI24IS012',name:'Anuragh K Talawar'},
   {sl:10,usn:'2GI24IS013',name:'Apeksha Padwalkar'},
   {sl:11,usn:'2GI24IS015',name:'Atharv Kitwadkar'},
   {sl:12,usn:'2GI24IS016',name:'Basavaraj Biradar'},
@@ -581,32 +626,45 @@ const STUDENTS = [
   {sl:67,usn:'2GI25IS415',name:'Sumith Sunil Kolekar'},
   {sl:68,usn:'2GI25IS416',name:'Vaishnavi Ashtekar'},
   {sl:69,usn:'2GI25IS417',name:'Vedant M Kalkundri'},
-  {sl:70,usn:'GIT25IS403',name:'SUDEEP M VADDAR'},
-  {sl:71,usn:'GIT25IS407',name:'Siddharth daivadnya'},
-  {sl:72,usn:'GIT25IS408',name:'Tejas Kulkarni'},
-  {sl:73,usn:'GIT25IS421',name:'Anmol Murkute'},
-  {sl:74,usn:'GIT25IS422',name:'Prajwal bill'},
+  {sl:70,usn:'GIT25IS403', name:'SUDEEP M VADDAR'},
+  {sl:71,usn:'GIT25IS407', name:'Siddharth daivadnya'},
+  {sl:72,usn:'GIT25IS408', name:'Tejas Kulkarni'},
+  {sl:73,usn:'GIT25IS421', name:'Anmol Murkute'},
+  {sl:74,usn:'GIT25IS422', name:'Prajwal bill'},
 ];
 
-// USN lookup map (case-insensitive, strips -T suffix)
 const usnMap = {};
 STUDENTS.forEach(s => {
   usnMap[s.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'')] = s;
 });
 
 // ══════════════════════════════════════════════════
-// STATE — uses same localStorage key as V1
+// STATE — same localStorage key shared with V1 & V2
 // ══════════════════════════════════════════════════
-let sessionActive  = false;
-let sessionToken   = null;
-let sessionDate    = null;
-let sessionPeriod  = null;
-let presentUSNs    = new Set();
+let sessionActive   = false;
+let sessionToken    = null;
+let sessionDate     = null;
+let sessionPeriod   = null;
+let presentUSNs     = new Set();
 let elapsedInterval = null;
 let elapsedSeconds  = 0;
+let pinBuffer       = '';
+let teacherAuthed   = false;
 
-// Shared with V1 via same key
+// Shared attendance history
 let history = JSON.parse(localStorage.getItem('att_history') || '[]');
+
+// Active tokens stored so students can validate
+// Format: { token: { date, period } }  — cleared when session closes
+function saveActiveToken(token, date, period) {
+  localStorage.setItem('att_active_token', JSON.stringify({ token, date, period }));
+}
+function clearActiveToken() {
+  localStorage.removeItem('att_active_token');
+}
+function getActiveToken() {
+  try { return JSON.parse(localStorage.getItem('att_active_token')); } catch { return null; }
+}
 
 // ══════════════════════════════════════════════════
 // NAVIGATION
@@ -616,13 +674,102 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
   if (id === 'screen-teacher')    { renderLiveTable(); renderHistory(); }
   if (id === 'screen-full-table') { renderFullTable(); }
-  if (id === 'screen-student')    { updateStudentView(); }
 }
-function showTeacher() { showScreen('screen-teacher'); }
-function showStudent() { showScreen('screen-student'); }
 
 // ══════════════════════════════════════════════════
-// SESSION TOGGLE — one button, open ↔ close
+// PIN SYSTEM
+// ══════════════════════════════════════════════════
+function askPin() {
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-modal').classList.remove('hidden');
+}
+
+function closePin() {
+  document.getElementById('pin-modal').classList.add('hidden');
+  pinBuffer = '';
+  updatePinDots();
+}
+
+function pinKey(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updatePinDots();
+  if (pinBuffer.length === 4) setTimeout(checkPin, 150);
+}
+
+function pinDel() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+}
+
+function pinClear() {
+  pinBuffer = '';
+  updatePinDots();
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('pd' + i);
+    dot.className = 'pin-dot' + (i < pinBuffer.length ? ' filled' : '');
+  }
+}
+
+function checkPin() {
+  if (pinBuffer === PROFESSOR_PIN) {
+    teacherAuthed = true;
+    closePin();
+    showScreen('screen-teacher');
+    document.getElementById('sess-date').value = new Date().toISOString().substr(0,10);
+    renderHistory();
+  } else {
+    // Flash red
+    for (let i = 0; i < 4; i++) {
+      document.getElementById('pd' + i).className = 'pin-dot error';
+    }
+    document.getElementById('pin-error').textContent = 'Wrong PIN. Try again.';
+    setTimeout(() => {
+      pinBuffer = '';
+      updatePinDots();
+      document.getElementById('pin-error').textContent = '';
+    }, 900);
+  }
+}
+
+function logoutTeacher() {
+  teacherAuthed = false;
+  showScreen('screen-login');
+}
+
+// ══════════════════════════════════════════════════
+// STUDENT — token-in-URL validation
+// ══════════════════════════════════════════════════
+function showStudent() {
+  const params  = new URLSearchParams(window.location.search);
+  const urlToken = params.get('token');
+  const active  = getActiveToken();
+
+  const valid   = urlToken && active && (urlToken === active.token);
+
+  document.getElementById('student-valid').style.display  = valid ? 'block' : 'none';
+  document.getElementById('student-closed').style.display = valid ? 'none'  : 'block';
+
+  if (valid) {
+    sessionDate   = active.date;
+    sessionPeriod = active.period;
+    sessionToken  = active.token;
+    sessionActive = true;
+    document.getElementById('si-date').textContent   = active.date;
+    document.getElementById('si-period').textContent = active.period;
+    document.getElementById('usn-input').focus();
+  }
+
+  showScreen('screen-student');
+}
+
+// ══════════════════════════════════════════════════
+// SESSION TOGGLE
 // ══════════════════════════════════════════════════
 function toggleSession() {
   if (!sessionActive) openSession();
@@ -635,21 +782,22 @@ function openSession() {
   if (!date) { notify('Please select a date', 'error'); return; }
 
   const exists = history.find(h => h.date === date && h.period === period);
-  if (exists && !confirm(`A session for ${date} ${period} already exists. Start a new one anyway?`)) return;
+  if (exists && !confirm(`Session for ${date} ${period} already exists. Start a new one?`)) return;
 
-  sessionActive = true;
-  sessionDate   = date;
-  sessionPeriod = period;
-  sessionToken  = Math.random().toString(36).substr(2,8).toUpperCase();
-  presentUSNs   = new Set();
+  sessionActive  = true;
+  sessionDate    = date;
+  sessionPeriod  = period;
+  sessionToken   = Math.random().toString(36).substr(2,10).toUpperCase();
+  presentUSNs    = new Set();
   window._presentTimes = {};
   elapsedSeconds = 0;
 
-  // Lock date/period while session is open
+  // Save token to localStorage so student pages can validate
+  saveActiveToken(sessionToken, date, period);
+
   document.getElementById('sess-date').disabled   = true;
   document.getElementById('sess-period').disabled = true;
 
-  // Update toggle button → red CLOSE button
   const btn = document.getElementById('toggle-btn');
   btn.className = 'toggle-btn close-btn';
   document.getElementById('toggle-icon').textContent  = '■';
@@ -669,47 +817,49 @@ function closeSession() {
   clearInterval(elapsedInterval);
   elapsedInterval = null;
 
-  // Save to history (same format as V1)
+  // Clear token so students get "closed" if they try the old link
+  clearActiveToken();
+
+  // Save to history
   const records = {};
   STUDENTS.forEach(s => {
     records[s.usn] = presentUSNs.has(
       s.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'')
     ) ? 'P' : 'A';
   });
-  const times = { ...window._presentTimes };
-
-  history.unshift({ date: sessionDate, period: sessionPeriod, token: sessionToken, records, times });
+  history.unshift({
+    date: sessionDate, period: sessionPeriod,
+    token: sessionToken, records,
+    times: { ...window._presentTimes }
+  });
   localStorage.setItem('att_history', JSON.stringify(history));
 
-  // Unlock date/period
   document.getElementById('sess-date').disabled   = false;
   document.getElementById('sess-period').disabled = false;
 
-  // Update toggle button → green OPEN button
   const btn = document.getElementById('toggle-btn');
   btn.className = 'toggle-btn open-btn';
   document.getElementById('toggle-icon').textContent  = '▶';
   document.getElementById('toggle-label').textContent = 'Open Attendance';
 
-  // Hide share panel, show idle
   document.getElementById('share-panel').style.display = 'none';
   document.getElementById('share-idle').style.display  = 'block';
   document.getElementById('elapsed-wrap').style.display = 'none';
 
   updateStatus('closed');
   renderHistory();
-  notify(`🔒 Attendance CLOSED & saved · ${presentUSNs.size} present`, 'success');
+  notify(`🔒 Closed & saved · ${presentUSNs.size} present`, 'success');
 }
 
 // ══════════════════════════════════════════════════
-// ELAPSED TIMER (counts UP — no pressure)
+// ELAPSED COUNTER (counts UP — no pressure)
 // ══════════════════════════════════════════════════
 function startElapsed() {
   document.getElementById('elapsed-wrap').style.display = 'block';
   elapsedInterval = setInterval(() => {
     elapsedSeconds++;
-    const m = Math.floor(elapsedSeconds / 60).toString().padStart(2,'0');
-    const s = (elapsedSeconds % 60).toString().padStart(2,'0');
+    const m = Math.floor(elapsedSeconds/60).toString().padStart(2,'0');
+    const s = (elapsedSeconds%60).toString().padStart(2,'0');
     document.getElementById('elapsed-display').textContent = `${m}:${s}`;
   }, 1000);
 }
@@ -718,32 +868,30 @@ function startElapsed() {
 // SHARE PANEL
 // ══════════════════════════════════════════════════
 function buildSharePanel() {
-  const url = `${window.location.href.split('?')[0]}?student=1&token=${sessionToken}`;
-  window._currentURL = url;
+  const url = `${window.location.href.split('?')[0]}?token=${sessionToken}`;
+  window._currentURL  = url;
 
   const dateFormatted = new Date(sessionDate + 'T00:00:00')
-    .toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+    .toLocaleDateString('en-IN', {weekday:'short',day:'numeric',month:'short',year:'numeric'});
 
   const msg =
 `📚 *ESC – Python Attendance*
 🏫 ISE Dept · 2025–26
 📅 ${dateFormatted} · ${sessionPeriod}
 
-✅ Click the link below to mark your attendance:
+✅ Click below to mark your attendance:
 ${url}
 
 _Do not share this link outside the class._`;
 
   window._waMessage = msg;
-
   document.getElementById('wa-msg-text').textContent = msg;
   document.getElementById('share-idle').style.display  = 'none';
   document.getElementById('share-panel').style.display = 'block';
 
-  // QR
   const qr = document.getElementById('qr-container');
   qr.innerHTML = '';
-  new QRCode(qr, { text: url, width: 160, height: 160, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.H });
+  new QRCode(qr, { text: url, width:160, height:160, colorDark:'#000', colorLight:'#fff', correctLevel: QRCode.CorrectLevel.H });
 }
 
 function copyWAMessage() {
@@ -752,36 +900,35 @@ function copyWAMessage() {
     const btn = document.getElementById('copy-wa-btn');
     const orig = btn.textContent;
     btn.textContent = '✅ Copied!';
-    notify('Message copied! Paste it in WhatsApp.', 'success');
+    notify('Copied! Paste in WhatsApp.', 'success');
     setTimeout(() => { btn.textContent = orig; }, 2500);
   }).catch(() => {
     const ta = document.createElement('textarea');
     ta.value = txt; document.body.appendChild(ta);
     ta.select(); document.execCommand('copy');
     document.body.removeChild(ta);
-    notify('Message copied!', 'success');
+    notify('Copied!', 'success');
   });
 }
 
 function openWhatsApp() {
-  window.open(`https://wa.me/?text=${encodeURIComponent(window._waMessage || '')}`, '_blank');
+  window.open(`https://wa.me/?text=${encodeURIComponent(window._waMessage||'')}`, '_blank');
 }
 
 // ══════════════════════════════════════════════════
-// STATUS BADGE
+// STATUS
 // ══════════════════════════════════════════════════
 function updateStatus(state) {
   const el = document.getElementById('sess-status');
-  if (state === 'open') {
-    el.className = 'status-badge open';
+  if (state === 'open')
+    el.className = 'status-badge open',
     el.innerHTML = '<span class="dot blink"></span>OPEN — students can submit';
-  } else if (state === 'closed') {
-    el.className = 'status-badge closed';
+  else if (state === 'closed')
+    el.className = 'status-badge closed',
     el.innerHTML = '<span class="dot"></span>CLOSED — saved to register';
-  } else {
-    el.className = 'status-badge idle';
+  else
+    el.className = 'status-badge idle',
     el.innerHTML = '<span class="dot"></span>Idle — not started';
-  }
 }
 
 // ══════════════════════════════════════════════════
@@ -791,8 +938,10 @@ function submitAttendance() {
   const raw = document.getElementById('usn-input').value.trim().toUpperCase().replace(/-T$/,'').replace(/\s/g,'');
   if (!raw) { notify('Please enter your USN', 'error'); return; }
 
-  if (!sessionActive) {
-    showResult('error','⛔','Session Closed','The attendance window is not open right now.');
+  // Re-validate token in case session was closed while student was on page
+  const active = getActiveToken();
+  if (!active || active.token !== sessionToken) {
+    showResult('error','⛔','Session Closed','The professor has closed attendance. Please contact them.');
     return;
   }
 
@@ -804,14 +953,16 @@ function submitAttendance() {
 
   const key = student.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'');
   if (presentUSNs.has(key)) {
-    showResult('error','⚠️','Already Marked',`${student.name}, you are already marked present!`);
+    showResult('error','⚠️','Already Marked',`${student.name} — you are already marked present!`);
     return;
   }
 
   presentUSNs.add(key);
   const timeStr = new Date().toTimeString().substr(0,5);
-  if (!window._presentTimes) window._presentTimes = {};
   window._presentTimes[key] = timeStr;
+
+  // Save present list to localStorage so professor panel updates even on same device
+  localStorage.setItem('att_present_' + sessionToken, JSON.stringify([...presentUSNs]));
 
   updateCounts();
   renderLiveTable();
@@ -827,23 +978,6 @@ function showResult(type, icon, title, msg) {
   document.getElementById('r-title').textContent = title;
   document.getElementById('r-msg').textContent   = msg;
   setTimeout(() => { box.style.display = 'none'; }, 4500);
-}
-
-function updateStudentView() {
-  const form   = document.getElementById('student-form');
-  const closed = document.getElementById('student-closed-msg');
-  const info   = document.getElementById('student-session-info');
-  if (sessionActive) {
-    form.style.display   = 'block';
-    closed.style.display = 'none';
-    info.style.display   = 'block';
-    document.getElementById('si-date').textContent   = sessionDate;
-    document.getElementById('si-period').textContent = sessionPeriod;
-  } else {
-    form.style.display   = 'none';
-    closed.style.display = 'block';
-    info.style.display   = 'none';
-  }
 }
 
 // ══════════════════════════════════════════════════
@@ -883,8 +1017,8 @@ function renderHistory() {
     el.innerHTML = '<div class="empty-state"><div class="e-icon">📭</div>No sessions recorded yet</div>';
     return;
   }
-  el.innerHTML = history.map((h, i) => {
-    const p = Object.values(h.records).filter(v => v==='P').length;
+  el.innerHTML = history.map((h,i) => {
+    const p = Object.values(h.records).filter(v=>v==='P').length;
     return `
       <div class="history-session" onclick="loadHistorySession(${i})">
         <div>
@@ -893,7 +1027,7 @@ function renderHistory() {
         </div>
         <div class="hs-stats">
           <span class="hs-p">✓ ${p} Present</span>
-          <span class="hs-a">✗ ${74 - p} Absent</span>
+          <span class="hs-a">✗ ${74-p} Absent</span>
         </div>
       </div>`;
   }).join('');
@@ -903,14 +1037,14 @@ function loadHistorySession(i) {
   const h = history[i];
   presentUSNs = new Set();
   window._presentTimes = h.times || {};
-  Object.entries(h.records).forEach(([usn, v]) => {
-    if (v === 'P') presentUSNs.add(usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,''));
+  Object.entries(h.records).forEach(([usn,v]) => {
+    if (v==='P') presentUSNs.add(usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,''));
   });
   sessionDate   = h.date;
   sessionPeriod = h.period;
   renderLiveTable();
   notify(`Viewing: ${h.date} · ${h.period}`, 'success');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 function renderFullTable() {
@@ -929,11 +1063,11 @@ function renderFullTable() {
     let row = `<tr><td style="color:var(--muted)">${s.sl}</td><td><span class="usn-chip">${s.usn}</span></td><td>${s.name}</td>`;
     sessions.forEach(h => {
       const v = h.records[s.usn] || 'A';
-      if (v === 'P') pCount++;
-      row += `<td>${v==='P' ? '<span class="badge-p">P</span>' : '<span class="badge-a">A</span>'}</td>`;
+      if (v==='P') pCount++;
+      row += `<td>${v==='P'?'<span class="badge-p">P</span>':'<span class="badge-a">A</span>'}</td>`;
     });
-    const pct   = sessions.length ? Math.round((pCount / sessions.length) * 100) : 0;
-    const color = pct >= 75 ? 'var(--green)' : pct >= 60 ? 'var(--yellow)' : 'var(--red)';
+    const pct   = sessions.length ? Math.round((pCount/sessions.length)*100) : 0;
+    const color = pct>=75?'var(--green)':pct>=60?'var(--yellow)':'var(--red)';
     row += `<td><div class="pct-bar-wrap">
       <div class="pct-bar"><div class="pct-bar-fill" style="width:${pct}%;background:${color}"></div></div>
       <span style="color:${color};font-weight:700;font-size:12px;min-width:38px">${pct}%</span>
@@ -943,42 +1077,43 @@ function renderFullTable() {
 }
 
 // ══════════════════════════════════════════════════
-// EXPORT CSV
+// EXPORT
 // ══════════════════════════════════════════════════
 function exportCSV() {
   const sessions = history.slice().reverse();
-  let csv = 'Sl.No,USN,Name,' + sessions.map(h => `${h.date} ${h.period}`).join(',') + ',Total Present,Percentage\n';
+  let csv = 'Sl.No,USN,Name,' + sessions.map(h=>`${h.date} ${h.period}`).join(',') + ',Total Present,Percentage\n';
   STUDENTS.forEach(s => {
     let p = 0;
-    const row = sessions.map(h => { const v = h.records[s.usn] || 'A'; if(v==='P')p++; return v; });
-    const pct = sessions.length ? Math.round((p / sessions.length) * 100) : 0;
+    const row = sessions.map(h=>{ const v=h.records[s.usn]||'A'; if(v==='P')p++; return v; });
+    const pct = sessions.length ? Math.round((p/sessions.length)*100) : 0;
     csv += `${s.sl},"${s.usn}","${s.name}",${row.join(',')},${p},${pct}%\n`;
   });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download = `Attendance_ISE_Python_2025-26_${new Date().toISOString().substr(0,10)}.csv`;
   a.click();
   notify('CSV exported!', 'success');
 }
 
 // ══════════════════════════════════════════════════
-// NOTIFICATION
+// NOTIFY
 // ══════════════════════════════════════════════════
-function notify(msg, type = 'success') {
+function notify(msg, type='success') {
   const el = document.getElementById('notif');
   el.textContent = msg;
   el.className = `notif ${type} show`;
-  setTimeout(() => el.classList.remove('show'), 3500);
+  setTimeout(()=>el.classList.remove('show'), 3500);
 }
 
 // ══════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('sess-date').value = new Date().toISOString().substr(0,10);
+  // If URL has token → go straight to student view
   const params = new URLSearchParams(window.location.search);
-  if (params.get('student') === '1') showScreen('screen-student');
-  renderHistory();
+  if (params.get('token')) {
+    showStudent();
+  }
 });
 </script>
 </body>
