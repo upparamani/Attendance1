@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ESC Python 22IS444 – Attendance | ISE Dept</title>
+<title>22IS444 – Attendance | KLSGIT ISE</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
@@ -26,43 +26,51 @@
   * { margin:0; padding:0; box-sizing:border-box; }
 
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-mono);
-    min-height: 100vh;
-    overflow-x: hidden;
+    background:var(--bg); color:var(--text);
+    font-family:var(--font-mono);
+    min-height:100vh; overflow-x:hidden;
   }
 
   body::before {
     content:''; position:fixed; inset:0;
     background-image:
-      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(rgba(0,229,255,0.03) 1px,transparent 1px),
       linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);
-    background-size: 40px 40px;
-    pointer-events:none; z-index:0;
+    background-size:40px 40px; pointer-events:none; z-index:0;
   }
 
   .screen { display:none; position:relative; z-index:1; }
   .screen.active { display:block; }
 
-  /* ── CENTRED SCREENS ── */
   .centered-screen {
     min-height:100vh;
     display:flex; align-items:center; justify-content:center;
-    flex-direction:column; gap:32px; padding:24px;
+    flex-direction:column; gap:28px; padding:24px;
   }
 
   /* ── LOGO ── */
-  .logo-area { text-align:center; }
-  .logo-area .dept { font-size:11px; letter-spacing:4px; color:var(--accent); text-transform:uppercase; margin-bottom:12px; }
-  .logo-area h1 { font-family:var(--font-head); font-size:clamp(28px,5vw,48px); font-weight:800; line-height:1.1; }
+  .logo-area { text-align:center; max-width:480px; }
+  .logo-area .inst {
+    font-size:13px; font-weight:700; color:var(--accent);
+    letter-spacing:1px; margin-bottom:4px; line-height:1.4;
+  }
+  .logo-area .dept-line {
+    font-size:11px; color:var(--muted); letter-spacing:2px;
+    text-transform:uppercase; margin-bottom:14px;
+  }
+  .logo-area h1 {
+    font-family:var(--font-head); font-size:clamp(24px,4vw,42px);
+    font-weight:800; line-height:1.1;
+  }
   .logo-area h1 span { color:var(--accent); }
-  .logo-area .sub { font-size:12px; color:var(--muted); margin-top:8px; letter-spacing:2px; }
-  .v-badge {
-    display:inline-block; margin-top:12px;
+  .logo-area .sub-code {
+    display:inline-block; margin-top:10px;
     background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.3);
-    color:var(--accent); font-size:10px; letter-spacing:2px;
-    padding:4px 12px; border-radius:20px;
+    color:var(--accent); font-size:11px; letter-spacing:3px;
+    padding:5px 14px; border-radius:20px; font-weight:700;
+  }
+  .logo-area .ay {
+    font-size:11px; color:var(--muted); margin-top:8px; letter-spacing:2px;
   }
 
   /* ── LOGIN CARDS ── */
@@ -84,57 +92,17 @@
   .login-card h3 { font-family:var(--font-head); font-size:18px; font-weight:700; margin-bottom:6px; }
   .login-card p { font-size:11px; color:var(--muted); }
 
-  /* ── PIN MODAL ── */
-  .modal-overlay {
-    position:fixed; inset:0; z-index:100;
-    background:rgba(0,0,0,0.8); backdrop-filter:blur(6px);
-    display:flex; align-items:center; justify-content:center; padding:24px;
-  }
-  .modal-overlay.hidden { display:none; }
-  .modal-box {
-    background:var(--card); border:1px solid var(--border);
-    border-radius:20px; padding:40px 32px;
-    max-width:360px; width:100%; text-align:center;
-  }
-  .modal-box h3 { font-family:var(--font-head); font-size:22px; font-weight:800; margin-bottom:6px; }
-  .modal-box p { font-size:12px; color:var(--muted); margin-bottom:28px; }
-  .pin-dots { display:flex; gap:12px; justify-content:center; margin-bottom:24px; }
-  .pin-dot {
-    width:16px; height:16px; border-radius:50%;
-    border:2px solid var(--border); background:transparent;
-    transition:all 0.2s;
-  }
-  .pin-dot.filled { background:var(--accent); border-color:var(--accent); }
-  .pin-dot.error  { background:var(--red);    border-color:var(--red); animation:shake 0.3s ease; }
-  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
-  .pin-grid {
-    display:grid; grid-template-columns:repeat(3,1fr);
-    gap:10px; margin-bottom:16px;
-  }
-  .pin-key {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:10px; padding:16px;
-    font-family:var(--font-head); font-size:20px; font-weight:700;
-    color:var(--text); cursor:pointer; transition:all 0.15s;
-    user-select:none;
-  }
-  .pin-key:hover { background:var(--accent); color:#000; border-color:var(--accent); transform:scale(1.05); }
-  .pin-key:active { transform:scale(0.97); }
-  .pin-key.del { font-size:16px; color:var(--muted); }
-  .pin-key.del:hover { background:var(--red); color:#fff; border-color:var(--red); }
-  .pin-error-msg { font-size:12px; color:var(--red); min-height:18px; margin-top:4px; }
-  .modal-cancel { font-size:12px; color:var(--muted); cursor:pointer; margin-top:12px; text-decoration:underline; }
-  .modal-cancel:hover { color:var(--text); }
-
   /* ── COMMON UI ── */
   .topbar {
     display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:32px; padding-bottom:16px;
+    margin-bottom:28px; padding-bottom:16px;
     border-bottom:1px solid var(--border);
     flex-wrap:wrap; gap:12px;
   }
-  .topbar h2 { font-family:var(--font-head); font-size:22px; font-weight:800; }
-  .topbar h2 span { color:var(--accent); }
+  .topbar-left { }
+  .topbar-left h2 { font-family:var(--font-head); font-size:20px; font-weight:800; }
+  .topbar-left h2 span { color:var(--accent); }
+  .topbar-left .topbar-sub { font-size:10px; color:var(--muted); letter-spacing:2px; margin-top:3px; }
 
   .btn {
     font-family:var(--font-mono); font-size:12px; font-weight:600;
@@ -158,7 +126,7 @@
   }
   .toggle-btn.open-btn  { background:var(--green); color:#000; box-shadow:0 0 30px rgba(0,255,157,0.25); }
   .toggle-btn.open-btn:hover  { background:#33ffb0; box-shadow:0 0 40px rgba(0,255,157,0.4); transform:translateY(-2px); }
-  .toggle-btn.close-btn { background:var(--red);   color:#fff; box-shadow:0 0 30px rgba(255,68,102,0.25); }
+  .toggle-btn.close-btn { background:var(--red); color:#fff; box-shadow:0 0 30px rgba(255,68,102,0.25); }
   .toggle-btn.close-btn:hover { background:#ff6680; box-shadow:0 0 40px rgba(255,68,102,0.4); transform:translateY(-2px); }
 
   .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
@@ -174,6 +142,7 @@
     border-radius:8px; padding:10px 14px; color:var(--text);
     font-family:var(--font-mono); font-size:13px; outline:none; transition:border-color 0.2s;
   }
+  .field input[type="date"]::-webkit-calendar-picker-indicator { filter:invert(0.6); cursor:pointer; }
   .field input:focus, .field select:focus { border-color:var(--accent); }
   .field select option { background:var(--surface); }
   .field input:disabled, .field select:disabled { opacity:0.45; cursor:not-allowed; }
@@ -190,17 +159,45 @@
   .dot.blink { animation:blink 1s infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-  /* Share panel */
+  /* ── SHARE PANEL ── */
   .qr-area { display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; }
   .share-idle { text-align:center; padding:24px 0; color:var(--muted); }
   .share-idle .si-icon { font-size:40px; margin-bottom:10px; }
   .share-idle p { font-size:12px; line-height:1.7; }
+
   .wa-box { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; width:100%; }
   .wa-box-label { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
   .wa-msg { font-size:12px; line-height:1.8; color:var(--text); white-space:pre-wrap; word-break:break-all; }
+
+  /* QR visible always (not collapsed) */
+  .qr-link-row {
+    display:flex; gap:16px; align-items:flex-start;
+    width:100%; flex-wrap:wrap; justify-content:center;
+  }
+  .qr-box {
+    background:#fff; padding:10px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .link-box {
+    flex:1; min-width:180px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:14px;
+  }
+  .link-box-label { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+  .link-text { font-size:11px; color:var(--accent); word-break:break-all; line-height:1.6; margin-bottom:10px; }
+  .copy-link-btn {
+    width:100%; padding:8px;
+    background:var(--accent); color:#000;
+    border:none; border-radius:6px; cursor:pointer;
+    font-family:var(--font-mono); font-size:11px; font-weight:700;
+    letter-spacing:1px; transition:all 0.2s;
+  }
+  .copy-link-btn:hover { background:#33eeff; }
+
   .share-actions { display:flex; gap:8px; width:100%; flex-wrap:wrap; }
 
-  /* Count pills */
+  /* ── COUNT PILLS ── */
   .live-count { display:flex; gap:12px; flex-wrap:wrap; width:100%; }
   .count-pill { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 16px; text-align:center; flex:1; min-width:70px; }
   .count-pill .num { font-family:var(--font-head); font-size:28px; font-weight:800; line-height:1; }
@@ -209,11 +206,27 @@
   .count-pill.absent  .num { color:var(--red); }
   .count-pill.total   .num { color:var(--accent); }
 
-  /* Elapsed */
+  /* ── PROFESSOR POPUP (new submission alert) ── */
+  .prof-popup {
+    position:fixed; top:24px; right:24px; z-index:9999;
+    background:var(--card); border:2px solid var(--green);
+    border-radius:14px; padding:16px 22px;
+    font-family:var(--font-head); min-width:260px;
+    transform:translateY(-100px); opacity:0;
+    transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events:none;
+  }
+  .prof-popup.show { transform:translateY(0); opacity:1; }
+  .prof-popup .pp-name { font-size:15px; font-weight:800; color:var(--green); margin-bottom:2px; }
+  .prof-popup .pp-usn  { font-size:11px; color:var(--muted); margin-bottom:6px; }
+  .prof-popup .pp-count { font-size:12px; color:var(--text); }
+  .prof-popup .pp-count strong { color:var(--accent); font-size:16px; }
+
+  /* ── ELAPSED ── */
   .elapsed { font-family:var(--font-head); font-size:36px; font-weight:800; color:var(--accent); letter-spacing:-1px; line-height:1; text-align:center; }
   .elapsed-label { font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; text-align:center; margin-top:4px; }
 
-  /* Table */
+  /* ── TABLE ── */
   .att-table-wrap { overflow-x:auto; max-height:420px; overflow-y:auto; margin-top:12px; }
   table { width:100%; border-collapse:collapse; font-size:12px; }
   th { background:var(--surface); padding:10px 12px; text-align:left; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); position:sticky; top:0; z-index:2; }
@@ -223,7 +236,7 @@
   .badge-a { display:inline-block; background:rgba(255,68,102,0.15); color:var(--red);   border:1px solid rgba(255,68,102,0.3); border-radius:4px; padding:2px 8px; font-size:10px; font-weight:700; }
   .usn-chip { font-size:10px; color:var(--muted); background:var(--surface); padding:2px 6px; border-radius:4px; }
 
-  /* History */
+  /* ── HISTORY ── */
   .history-session {
     background:var(--surface); border:1px solid var(--border); border-radius:10px;
     padding:14px 18px; margin-bottom:10px;
@@ -237,60 +250,75 @@
   .hs-p { color:var(--green); font-weight:700; }
   .hs-a { color:var(--red);   font-weight:700; }
 
-  /* Student screen */
+  /* ── STUDENT SCREEN ── */
   .student-card {
     background:var(--card); border:1px solid var(--border);
     border-radius:20px; padding:40px 32px;
-    max-width:420px; width:100%; text-align:center;
+    max-width:440px; width:100%; text-align:center;
   }
-  .student-card h2 { font-family:var(--font-head); font-size:24px; font-weight:800; margin-bottom:6px; }
-  .student-card .sub { font-size:11px; color:var(--muted); margin-bottom:28px; letter-spacing:1px; }
+  .student-card .s-inst { font-size:11px; color:var(--accent); letter-spacing:1px; margin-bottom:2px; font-weight:700; }
+  .student-card .s-dept { font-size:10px; color:var(--muted); letter-spacing:1px; margin-bottom:16px; }
+  .student-card h2 { font-family:var(--font-head); font-size:26px; font-weight:800; margin-bottom:4px; }
+  .student-card .s-code {
+    display:inline-block; margin-bottom:20px;
+    background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.3);
+    color:var(--accent); font-size:11px; letter-spacing:3px;
+    padding:4px 14px; border-radius:20px; font-weight:700;
+  }
 
   .session-info-box {
-    background:var(--surface); border:1px solid var(--border);
+    background:var(--surface); border:1px solid rgba(0,255,157,0.3);
     border-radius:10px; padding:14px 18px; margin-bottom:20px;
-    font-size:12px; color:var(--muted); text-align:left; line-height:1.8;
+    font-size:12px; color:var(--muted); text-align:left; line-height:2;
   }
   .session-info-box strong { color:var(--text); }
 
   .big-input {
     width:100%; background:var(--surface); border:2px solid var(--border);
     border-radius:12px; padding:16px; color:var(--text);
-    font-family:var(--font-mono); font-size:16px; font-weight:600;
-    text-align:center; letter-spacing:2px; outline:none;
+    font-family:var(--font-mono); font-size:18px; font-weight:700;
+    text-align:center; letter-spacing:3px; outline:none;
     transition:border-color 0.2s; margin-bottom:14px; text-transform:uppercase;
   }
-  .big-input:focus { border-color:var(--green); }
+  .big-input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(0,255,157,0.1); }
+  .big-input::placeholder { font-size:13px; letter-spacing:1px; font-weight:400; color:var(--muted); }
 
   .submit-btn {
     width:100%; padding:16px; font-family:var(--font-head);
-    font-size:16px; font-weight:700; background:var(--green);
+    font-size:17px; font-weight:800; background:var(--green);
     color:#000; border:none; border-radius:12px; cursor:pointer;
     transition:all 0.2s; letter-spacing:1px;
+    box-shadow:0 0 20px rgba(0,255,157,0.2);
   }
-  .submit-btn:hover { background:#33ffb0; transform:translateY(-2px); }
+  .submit-btn:hover { background:#33ffb0; transform:translateY(-2px); box-shadow:0 0 30px rgba(0,255,157,0.35); }
 
-  .result-box { border-radius:12px; padding:20px; margin-top:16px; display:none; }
-  .result-box.success { background:rgba(0,255,157,0.1); border:1px solid rgba(0,255,157,0.3); }
-  .result-box.error   { background:rgba(255,68,102,0.1); border:1px solid rgba(255,68,102,0.3); }
-  .result-box .icon { font-size:32px; margin-bottom:8px; }
-  .result-box h3 { font-family:var(--font-head); font-size:18px; font-weight:700; }
-  .result-box p  { font-size:12px; color:var(--muted); margin-top:6px; }
+  /* ── RESULT BOX (student) ── */
+  .result-box {
+    border-radius:14px; padding:24px 20px; margin-top:16px;
+    display:none; animation:fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .result-box.success { background:rgba(0,255,157,0.08); border:2px solid rgba(0,255,157,0.4); }
+  .result-box.error   { background:rgba(255,68,102,0.08); border:2px solid rgba(255,68,102,0.4); }
+  .result-box .r-icon { font-size:40px; margin-bottom:8px; }
+  .result-box h3 { font-family:var(--font-head); font-size:20px; font-weight:800; margin-bottom:6px; }
+  .result-box .r-name { font-size:14px; color:var(--text); font-weight:600; margin-bottom:4px; }
+  .result-box .r-detail { font-size:11px; color:var(--muted); line-height:1.6; }
 
   .closed-box {
-    background:rgba(255,68,102,0.1); border:1px solid rgba(255,68,102,0.3);
-    border-radius:12px; padding:24px; text-align:center;
+    background:rgba(255,68,102,0.08); border:2px solid rgba(255,68,102,0.3);
+    border-radius:14px; padding:28px 20px; text-align:center;
   }
-  .closed-box .icon { font-size:36px; margin-bottom:10px; }
-  .closed-box h3 { font-family:var(--font-head); font-size:18px; font-weight:700; color:var(--red); }
-  .closed-box p  { font-size:12px; color:var(--muted); margin-top:6px; line-height:1.7; }
+  .closed-box .icon { font-size:40px; margin-bottom:10px; }
+  .closed-box h3 { font-family:var(--font-head); font-size:20px; font-weight:800; color:var(--red); margin-bottom:8px; }
+  .closed-box p  { font-size:12px; color:var(--muted); line-height:1.8; }
 
-  /* Full register */
+  /* ── FULL REGISTER ── */
   .pct-bar-wrap { display:flex; align-items:center; gap:8px; }
   .pct-bar { height:4px; background:var(--border); border-radius:2px; flex:1; min-width:60px; }
-  .pct-bar-fill { height:100%; border-radius:2px; transition:width 0.4s; }
+  .pct-bar-fill { height:100%; border-radius:2px; }
 
-  /* Misc */
+  /* ── MISC ── */
   .search-input {
     background:var(--surface); border:1px solid var(--border);
     border-radius:8px; padding:8px 12px; color:var(--text);
@@ -303,11 +331,12 @@
   .flex-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .section-gap { margin-bottom:20px; }
 
+  /* bottom notify */
   .notif {
     position:fixed; bottom:24px; right:24px;
     background:var(--card); border:1px solid var(--border);
     border-radius:10px; padding:14px 20px; font-size:13px;
-    z-index:9999; transform:translateY(80px); opacity:0;
+    z-index:9998; transform:translateY(80px); opacity:0;
     transition:all 0.3s ease; max-width:320px;
   }
   .notif.show { transform:translateY(0); opacity:1; }
@@ -321,51 +350,28 @@
 </head>
 <body>
 
-<!-- ══════════ PIN MODAL ══════════ -->
-<div class="modal-overlay hidden" id="pin-modal">
-  <div class="modal-box">
-    <div style="font-size:36px;margin-bottom:10px;">🔐</div>
-    <h3>Professor Login</h3>
-    <p>Enter your 4-digit PIN to continue</p>
-    <div class="pin-dots">
-      <div class="pin-dot" id="pd0"></div>
-      <div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div>
-      <div class="pin-dot" id="pd3"></div>
-    </div>
-    <div class="pin-grid">
-      <div class="pin-key" onclick="pinKey('1')">1</div>
-      <div class="pin-key" onclick="pinKey('2')">2</div>
-      <div class="pin-key" onclick="pinKey('3')">3</div>
-      <div class="pin-key" onclick="pinKey('4')">4</div>
-      <div class="pin-key" onclick="pinKey('5')">5</div>
-      <div class="pin-key" onclick="pinKey('6')">6</div>
-      <div class="pin-key" onclick="pinKey('7')">7</div>
-      <div class="pin-key" onclick="pinKey('8')">8</div>
-      <div class="pin-key" onclick="pinKey('9')">9</div>
-      <div class="pin-key del" onclick="pinDel()">⌫</div>
-      <div class="pin-key" onclick="pinKey('0')">0</div>
-      <div class="pin-key del" onclick="pinClear()">✕</div>
-    </div>
-    <div class="pin-error-msg" id="pin-error"></div>
-    <div class="modal-cancel" onclick="closePin()">Cancel</div>
-  </div>
+<!-- ══════════ PROFESSOR POPUP (new submission alert) ══════════ -->
+<div class="prof-popup" id="prof-popup">
+  <div class="pp-name" id="pp-name">—</div>
+  <div class="pp-usn"  id="pp-usn">—</div>
+  <div class="pp-count">Total present: <strong id="pp-count">0</strong> / 74</div>
 </div>
 
-<!-- ══════════ LOGIN SCREEN ══════════ -->
+<!-- ══════════ LOGIN ══════════ -->
 <div id="screen-login" class="screen active">
   <div class="centered-screen">
     <div class="logo-area">
-      <div class="dept">ISE Dept · GIT College</div>
+      <div class="inst">KLS Gogte Institute of Technology</div>
+      <div class="dept-line">Department of Information Science &amp; Engineering</div>
       <h1>Attendance<br><span>System</span></h1>
-      <div class="sub">ESC – Python Programming · 2025–26</div>
-      <div class="v-badge">VERSION 3 — SECURE</div>
+      <div class="sub-code">22IS444 — Python Programming</div>
+      <div class="ay">Academic Year 2025–26</div>
     </div>
     <div class="login-cards">
-      <div class="login-card teacher" id="prof-card" onclick="askPin()" style="display:none;">
+      <div class="login-card teacher" id="prof-card" onclick="showTeacher()" style="display:none;">
         <div class="icon">👨‍🏫</div>
         <h3>Professor</h3>
-        <p>PIN protected</p>
+        <p>Manage sessions</p>
       </div>
       <div class="login-card student" onclick="showStudent()">
         <div class="icon">🎓</div>
@@ -376,19 +382,23 @@
   </div>
 </div>
 
-<!-- ══════════ TEACHER SCREEN ══════════ -->
+<!-- ══════════ TEACHER ══════════ -->
 <div id="screen-teacher" class="screen">
   <div style="padding:24px;max-width:1100px;margin:0 auto;">
     <div class="topbar">
-      <h2>Professor <span>Dashboard</span> <span style="font-size:13px;color:var(--muted);font-weight:400;">v3</span></h2>
+      <div class="topbar-left">
+        <h2>Professor <span>Dashboard</span></h2>
+        <div class="topbar-sub">KLS GIT · ISE Dept · 22IS444 · 2025–26</div>
+      </div>
       <div class="flex-row">
         <button class="btn btn-ghost" onclick="showScreen('screen-full-table')">📊 Full Register</button>
         <button class="btn btn-yellow" onclick="exportCSV()">⬇ Export CSV</button>
-        <button class="btn btn-ghost" onclick="logoutTeacher()">🔒 Logout</button>
+        <button class="btn btn-ghost" onclick="showScreen('screen-login')">← Exit</button>
       </div>
     </div>
 
     <div class="grid-2 section-gap">
+
       <!-- Session Setup -->
       <div class="card">
         <div class="card-title">📅 Session Setup</div>
@@ -397,30 +407,25 @@
           <input type="date" id="sess-date">
         </div>
         <div class="field">
-          <label>Period / Slot</label>
+          <label>Period</label>
           <select id="sess-period">
-            <option value="P1">Period 1 (8:30–9:20)</option>
-            <option value="P2">Period 2 (9:20–10:10)</option>
-            <option value="P3">Period 3 (10:30–11:20)</option>
-            <option value="P4">Period 4 (11:20–12:10)</option>
-            <option value="P5">Period 5 (1:10–2:00)</option>
-            <option value="P6">Period 6 (2:00–2:50)</option>
-            <option value="Lab">Lab Session</option>
+            <option value="P1">Period 1</option>
+            <option value="P2">Period 2</option>
           </select>
         </div>
         <div style="height:12px;"></div>
 
-        <!-- BIG TOGGLE BUTTON -->
         <button class="toggle-btn open-btn" id="toggle-btn" onclick="toggleSession()">
           <span id="toggle-icon">▶</span>
           <span id="toggle-label">Open Attendance</span>
         </button>
 
         <div style="margin-top:16px;text-align:center;">
-          <span id="sess-status" class="status-badge idle"><span class="dot"></span>Idle — not started</span>
+          <span id="sess-status" class="status-badge idle">
+            <span class="dot"></span>Idle — not started
+          </span>
         </div>
 
-        <!-- Elapsed (counts up — no pressure) -->
         <div id="elapsed-wrap" style="display:none;margin-top:16px;">
           <div class="elapsed" id="elapsed-display">00:00</div>
           <div class="elapsed-label">Session open for</div>
@@ -431,26 +436,41 @@
       <div class="card">
         <div class="card-title">📲 Share with Students</div>
         <div class="qr-area">
+
           <div class="share-idle" id="share-idle">
             <div class="si-icon">💬</div>
-            <p>Open attendance to get<br>a WhatsApp-ready message</p>
+            <p>Open attendance to get<br>WhatsApp message + QR code + link</p>
           </div>
+
           <div id="share-panel" style="display:none;width:100%;">
+
+            <!-- WhatsApp message -->
             <div class="wa-box" style="margin-bottom:12px;">
-              <div class="wa-box-label">📋 WhatsApp Message — copy & paste</div>
+              <div class="wa-box-label">📋 WhatsApp Message</div>
               <div class="wa-msg" id="wa-msg-text"></div>
             </div>
-            <div class="share-actions" style="margin-bottom:12px;">
+
+            <!-- WA buttons -->
+            <div class="share-actions" style="margin-bottom:14px;">
               <button class="btn btn-accent" id="copy-wa-btn" onclick="copyWAMessage()" style="flex:1;">📋 Copy Message</button>
               <button class="btn" style="background:#25D366;color:#fff;flex:1;" onclick="openWhatsApp()">📱 WhatsApp</button>
             </div>
-            <details>
-              <summary style="font-size:11px;color:var(--muted);cursor:pointer;letter-spacing:1px;text-transform:uppercase;padding:6px 0;">▶ Also show QR (for projector)</summary>
-              <div style="display:flex;justify-content:center;margin-top:12px;">
-                <div id="qr-container" style="background:white;padding:12px;border-radius:10px;display:inline-block;"></div>
+
+            <!-- QR + Link side by side — always visible -->
+            <div class="qr-link-row">
+              <div class="qr-box">
+                <div id="qr-container"></div>
               </div>
-            </details>
+              <div class="link-box">
+                <div class="link-box-label">🔗 Direct Link</div>
+                <div class="link-text" id="link-text">—</div>
+                <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">📋 Copy Link</button>
+              </div>
+            </div>
+
           </div>
+
+          <!-- Live counts — always visible -->
           <div class="live-count">
             <div class="count-pill present"><div class="num" id="cnt-p">0</div><div class="lbl">Present</div></div>
             <div class="count-pill absent"><div class="num" id="cnt-a">74</div><div class="lbl">Absent</div></div>
@@ -482,43 +502,47 @@
   </div>
 </div>
 
-<!-- ══════════ STUDENT SCREEN ══════════ -->
+<!-- ══════════ STUDENT ══════════ -->
 <div id="screen-student" class="screen">
   <div class="centered-screen">
     <div class="student-card">
+      <div class="s-inst">KLS Gogte Institute of Technology</div>
+      <div class="s-dept">Dept. of Information Science &amp; Engineering</div>
       <h2>Mark Attendance</h2>
-      <div class="sub">ESC – PYTHON · ISE DEPT · 2025–26</div>
+      <div class="s-code">22IS444 — Python Programming</div>
 
-      <!-- Valid token → show form -->
+      <!-- Valid session -->
       <div id="student-valid" style="display:none;">
-        <div class="session-info-box" id="student-session-info">
+        <div class="session-info-box">
           <strong id="si-date">—</strong><br>
-          <span id="si-period">—</span><br>
-          <span style="color:var(--green);font-weight:600;">🟢 Attendance is Open</span>
+          <span id="si-period">—</span> &nbsp;·&nbsp;
+          <span style="color:var(--green);font-weight:700;">🟢 Attendance is Open</span>
         </div>
         <input class="big-input" type="text" id="usn-input"
           placeholder="Enter your USN"
           autocomplete="off" spellcheck="false"
           onkeydown="if(event.key==='Enter') submitAttendance()">
-        <button class="submit-btn" onclick="submitAttendance()">Mark Present ✓</button>
+        <button class="submit-btn" onclick="submitAttendance()">✓ Mark Present</button>
+
         <div id="result-box" class="result-box">
-          <div class="icon" id="r-icon">✅</div>
+          <div class="r-icon" id="r-icon">✅</div>
           <h3 id="r-title"></h3>
-          <p id="r-msg"></p>
+          <div class="r-name" id="r-name"></div>
+          <div class="r-detail" id="r-detail"></div>
         </div>
       </div>
 
-      <!-- No valid token → closed message -->
+      <!-- No valid session -->
       <div id="student-closed" style="display:none;">
         <div class="closed-box">
           <div class="icon">⛔</div>
           <h3>Not Open Yet</h3>
-          <p>Your professor hasn't shared the attendance link yet.<br>Wait for the WhatsApp message and click that link directly.</p>
+          <p>Your professor hasn't opened attendance.<br>Wait for the WhatsApp message and<br>click that link directly.</p>
         </div>
       </div>
 
       <div style="margin-top:20px;">
-        <button class="btn btn-ghost" style="width:100%;" onclick="showScreen('screen-login')">← Back</button>
+        <button class="btn btn-ghost" style="width:100%;font-size:11px;" onclick="showScreen('screen-login')">← Back</button>
       </div>
     </div>
   </div>
@@ -528,7 +552,10 @@
 <div id="screen-full-table" class="screen">
   <div style="padding:24px;max-width:1200px;margin:0 auto;">
     <div class="topbar">
-      <h2>Full <span>Attendance Register</span></h2>
+      <div class="topbar-left">
+        <h2>Full <span>Attendance Register</span></h2>
+        <div class="topbar-sub">22IS444 · ISE · KLS GIT · 2025–26</div>
+      </div>
       <div class="flex-row">
         <button class="btn btn-yellow" onclick="exportCSV()">⬇ Export CSV</button>
         <button class="btn btn-ghost" onclick="showScreen('screen-teacher')">← Back</button>
@@ -549,12 +576,7 @@
 
 <script>
 // ══════════════════════════════════════════════════
-// CONFIG — change PIN here
-// ══════════════════════════════════════════════════
-const PROFESSOR_PIN = '0000'; // ← Change this to your preferred 4-digit PIN
-
-// ══════════════════════════════════════════════════
-// STUDENTS
+// STUDENTS — 74, ISE Dept, KLS GIT
 // ══════════════════════════════════════════════════
 const STUDENTS = [
   {sl:1, usn:'2GI23IS103',name:'Sridhar B Awajjigol'},
@@ -633,13 +655,14 @@ const STUDENTS = [
   {sl:74,usn:'GIT25IS422', name:'Prajwal bill'},
 ];
 
+// USN lookup — accepts any case, strips -T suffix
 const usnMap = {};
 STUDENTS.forEach(s => {
   usnMap[s.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'')] = s;
 });
 
 // ══════════════════════════════════════════════════
-// STATE — same localStorage key shared with V1 & V2
+// STATE — shared localStorage with V1/V2
 // ══════════════════════════════════════════════════
 let sessionActive   = false;
 let sessionToken    = null;
@@ -648,20 +671,14 @@ let sessionPeriod   = null;
 let presentUSNs     = new Set();
 let elapsedInterval = null;
 let elapsedSeconds  = 0;
-let pinBuffer       = '';
-let teacherAuthed   = false;
+let profPopupTimer  = null;
 
-// Shared attendance history
 let history = JSON.parse(localStorage.getItem('att_history') || '[]');
 
-// Active tokens stored so students can validate
-// Format: { token: { date, period } }  — cleared when session closes
 function saveActiveToken(token, date, period) {
-  localStorage.setItem('att_active_token', JSON.stringify({ token, date, period }));
+  localStorage.setItem('att_active_token', JSON.stringify({token, date, period}));
 }
-function clearActiveToken() {
-  localStorage.removeItem('att_active_token');
-}
+function clearActiveToken() { localStorage.removeItem('att_active_token'); }
 function getActiveToken() {
   try { return JSON.parse(localStorage.getItem('att_active_token')); } catch { return null; }
 }
@@ -676,81 +693,20 @@ function showScreen(id) {
   if (id === 'screen-full-table') { renderFullTable(); }
 }
 
-// ══════════════════════════════════════════════════
-// PIN SYSTEM
-// ══════════════════════════════════════════════════
-function askPin() {
-  pinBuffer = '';
-  updatePinDots();
-  document.getElementById('pin-error').textContent = '';
-  document.getElementById('pin-modal').classList.remove('hidden');
-}
-
-function closePin() {
-  document.getElementById('pin-modal').classList.add('hidden');
-  pinBuffer = '';
-  updatePinDots();
-}
-
-function pinKey(d) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += d;
-  updatePinDots();
-  if (pinBuffer.length === 4) setTimeout(checkPin, 150);
-}
-
-function pinDel() {
-  pinBuffer = pinBuffer.slice(0, -1);
-  updatePinDots();
-}
-
-function pinClear() {
-  pinBuffer = '';
-  updatePinDots();
-}
-
-function updatePinDots() {
-  for (let i = 0; i < 4; i++) {
-    const dot = document.getElementById('pd' + i);
-    dot.className = 'pin-dot' + (i < pinBuffer.length ? ' filled' : '');
-  }
-}
-
-function checkPin() {
-  if (pinBuffer === PROFESSOR_PIN) {
-    teacherAuthed = true;
-    closePin();
-    showScreen('screen-teacher');
-    document.getElementById('sess-date').value = new Date().toISOString().substr(0,10);
-    renderHistory();
-  } else {
-    // Flash red
-    for (let i = 0; i < 4; i++) {
-      document.getElementById('pd' + i).className = 'pin-dot error';
-    }
-    document.getElementById('pin-error').textContent = 'Wrong PIN. Try again.';
-    setTimeout(() => {
-      pinBuffer = '';
-      updatePinDots();
-      document.getElementById('pin-error').textContent = '';
-    }, 900);
-  }
-}
-
-function logoutTeacher() {
-  teacherAuthed = false;
-  showScreen('screen-login');
+function showTeacher() {
+  document.getElementById('sess-date').value = new Date().toISOString().substr(0,10);
+  showScreen('screen-teacher');
+  renderHistory();
 }
 
 // ══════════════════════════════════════════════════
-// STUDENT — token-in-URL validation
+// STUDENT — token validation via localStorage
 // ══════════════════════════════════════════════════
 function showStudent() {
-  const params  = new URLSearchParams(window.location.search);
+  const params   = new URLSearchParams(window.location.search);
   const urlToken = params.get('token');
-  const active  = getActiveToken();
-
-  const valid   = urlToken && active && (urlToken === active.token);
+  const active   = getActiveToken();
+  const valid    = urlToken && active && (urlToken === active.token);
 
   document.getElementById('student-valid').style.display  = valid ? 'block' : 'none';
   document.getElementById('student-closed').style.display = valid ? 'none'  : 'block';
@@ -760,12 +716,16 @@ function showStudent() {
     sessionPeriod = active.period;
     sessionToken  = active.token;
     sessionActive = true;
-    document.getElementById('si-date').textContent   = active.date;
+    document.getElementById('si-date').textContent   = formatDate(active.date);
     document.getElementById('si-period').textContent = active.period;
-    document.getElementById('usn-input').focus();
+    setTimeout(() => document.getElementById('usn-input').focus(), 300);
   }
-
   showScreen('screen-student');
+}
+
+function formatDate(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-IN',
+    {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 }
 
 // ══════════════════════════════════════════════════
@@ -779,10 +739,10 @@ function toggleSession() {
 function openSession() {
   const date   = document.getElementById('sess-date').value;
   const period = document.getElementById('sess-period').value;
-  if (!date) { notify('Please select a date', 'error'); return; }
+  if (!date) { notify('Please select a date first', 'error'); return; }
 
   const exists = history.find(h => h.date === date && h.period === period);
-  if (exists && !confirm(`Session for ${date} ${period} already exists. Start a new one?`)) return;
+  if (exists && !confirm(`A session for ${date} ${period} already exists. Start a new one anyway?`)) return;
 
   sessionActive  = true;
   sessionDate    = date;
@@ -792,7 +752,6 @@ function openSession() {
   window._presentTimes = {};
   elapsedSeconds = 0;
 
-  // Save token to localStorage so student pages can validate
   saveActiveToken(sessionToken, date, period);
 
   document.getElementById('sess-date').disabled   = true;
@@ -813,14 +772,9 @@ function openSession() {
 function closeSession() {
   if (!sessionActive) return;
   sessionActive = false;
-
   clearInterval(elapsedInterval);
-  elapsedInterval = null;
-
-  // Clear token so students get "closed" if they try the old link
   clearActiveToken();
 
-  // Save to history
   const records = {};
   STUDENTS.forEach(s => {
     records[s.usn] = presentUSNs.has(
@@ -848,11 +802,11 @@ function closeSession() {
 
   updateStatus('closed');
   renderHistory();
-  notify(`🔒 Closed & saved · ${presentUSNs.size} present`, 'success');
+  notify(`🔒 Closed & saved · ${presentUSNs.size} of 74 present`, 'success');
 }
 
 // ══════════════════════════════════════════════════
-// ELAPSED COUNTER (counts UP — no pressure)
+// ELAPSED (counts UP)
 // ══════════════════════════════════════════════════
 function startElapsed() {
   document.getElementById('elapsed-wrap').style.display = 'block';
@@ -868,30 +822,38 @@ function startElapsed() {
 // SHARE PANEL
 // ══════════════════════════════════════════════════
 function buildSharePanel() {
-  const url = `${window.location.href.split('?')[0]}?token=${sessionToken}`;
-  window._currentURL  = url;
+  const base = window.location.href.split('?')[0];
+  const url  = `${base}?token=${sessionToken}`;
+  window._currentURL = url;
 
   const dateFormatted = new Date(sessionDate + 'T00:00:00')
     .toLocaleDateString('en-IN', {weekday:'short',day:'numeric',month:'short',year:'numeric'});
 
   const msg =
-`📚 *ESC – Python Attendance*
-🏫 ISE Dept · 2025–26
+`📚 *22IS444 — Python Programming*
+🏫 KLS GIT · ISE Dept · 2025–26
 📅 ${dateFormatted} · ${sessionPeriod}
 
-✅ Click below to mark your attendance:
+✅ Click the link to mark your attendance:
 ${url}
 
 _Do not share this link outside the class._`;
 
   window._waMessage = msg;
   document.getElementById('wa-msg-text').textContent = msg;
+  document.getElementById('link-text').textContent   = url;
+
   document.getElementById('share-idle').style.display  = 'none';
   document.getElementById('share-panel').style.display = 'block';
 
+  // QR code
   const qr = document.getElementById('qr-container');
   qr.innerHTML = '';
-  new QRCode(qr, { text: url, width:160, height:160, colorDark:'#000', colorLight:'#fff', correctLevel: QRCode.CorrectLevel.H });
+  new QRCode(qr, {
+    text: url, width:140, height:140,
+    colorDark:'#000', colorLight:'#fff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
 }
 
 function copyWAMessage() {
@@ -900,15 +862,27 @@ function copyWAMessage() {
     const btn = document.getElementById('copy-wa-btn');
     const orig = btn.textContent;
     btn.textContent = '✅ Copied!';
-    notify('Copied! Paste in WhatsApp.', 'success');
+    notify('WhatsApp message copied!', 'success');
     setTimeout(() => { btn.textContent = orig; }, 2500);
-  }).catch(() => {
-    const ta = document.createElement('textarea');
-    ta.value = txt; document.body.appendChild(ta);
-    ta.select(); document.execCommand('copy');
-    document.body.removeChild(ta);
-    notify('Copied!', 'success');
-  });
+  }).catch(() => fallbackCopy(window._waMessage, 'Message copied!'));
+}
+
+function copyLink() {
+  const url = window._currentURL || '';
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-link-btn');
+    btn.textContent = '✅ Copied!';
+    notify('Link copied!', 'success');
+    setTimeout(() => { btn.textContent = '📋 Copy Link'; }, 2500);
+  }).catch(() => fallbackCopy(url, 'Link copied!'));
+}
+
+function fallbackCopy(txt, msg) {
+  const ta = document.createElement('textarea');
+  ta.value = txt; document.body.appendChild(ta);
+  ta.select(); document.execCommand('copy');
+  document.body.removeChild(ta);
+  notify(msg, 'success');
 }
 
 function openWhatsApp() {
@@ -932,28 +906,44 @@ function updateStatus(state) {
 }
 
 // ══════════════════════════════════════════════════
+// PROFESSOR POPUP — shows on each new submission
+// ══════════════════════════════════════════════════
+function showProfPopup(student) {
+  document.getElementById('pp-name').textContent  = student.name;
+  document.getElementById('pp-usn').textContent   = student.usn;
+  document.getElementById('pp-count').textContent = presentUSNs.size;
+
+  const popup = document.getElementById('prof-popup');
+  popup.classList.add('show');
+
+  clearTimeout(profPopupTimer);
+  profPopupTimer = setTimeout(() => popup.classList.remove('show'), 4000);
+}
+
+// ══════════════════════════════════════════════════
 // STUDENT SUBMISSION
 // ══════════════════════════════════════════════════
 function submitAttendance() {
+  // Accept any case — convert to uppercase for lookup
   const raw = document.getElementById('usn-input').value.trim().toUpperCase().replace(/-T$/,'').replace(/\s/g,'');
-  if (!raw) { notify('Please enter your USN', 'error'); return; }
+  if (!raw) { showResult('error','⚠️','Empty USN','Please enter your USN.',''); return; }
 
-  // Re-validate token in case session was closed while student was on page
+  // Validate token still active
   const active = getActiveToken();
   if (!active || active.token !== sessionToken) {
-    showResult('error','⛔','Session Closed','The professor has closed attendance. Please contact them.');
+    showResult('error','⛔','Session Closed','The professor has closed attendance.','Please contact your professor.');
     return;
   }
 
   const student = usnMap[raw];
   if (!student) {
-    showResult('error','❌','USN Not Found',`"${raw}" is not in the class list. Check and try again.`);
+    showResult('error','❌','USN Not Found',`"${raw}" not in class list.`,'Check spelling and try again.');
     return;
   }
 
   const key = student.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'');
   if (presentUSNs.has(key)) {
-    showResult('error','⚠️','Already Marked',`${student.name} — you are already marked present!`);
+    showResult('error','⚠️','Already Marked',`${student.name}`,`You are already marked present today.`);
     return;
   }
 
@@ -961,23 +951,32 @@ function submitAttendance() {
   const timeStr = new Date().toTimeString().substr(0,5);
   window._presentTimes[key] = timeStr;
 
-  // Save present list to localStorage so professor panel updates even on same device
   localStorage.setItem('att_present_' + sessionToken, JSON.stringify([...presentUSNs]));
 
+  // Success message to student
+  showResult('success','✅','Present!', student.name,
+    `${formatDate(sessionDate)} · ${sessionPeriod} · ${timeStr}`);
+
+  document.getElementById('usn-input').value = '';
+
+  // Update professor view if same device
   updateCounts();
   renderLiveTable();
-  showResult('success','✅','Marked Present!',`${student.name} · ${sessionDate} · ${sessionPeriod} · ${timeStr}`);
-  document.getElementById('usn-input').value = '';
+
+  // Professor popup — only shown on professor's screen (won't appear on student screen as prof-popup is in DOM but professor is on diff screen)
+  showProfPopup(student);
 }
 
-function showResult(type, icon, title, msg) {
+function showResult(type, icon, title, name, detail) {
   const box = document.getElementById('result-box');
   box.style.display = 'block';
   box.className = `result-box ${type}`;
-  document.getElementById('r-icon').textContent  = icon;
-  document.getElementById('r-title').textContent = title;
-  document.getElementById('r-msg').textContent   = msg;
-  setTimeout(() => { box.style.display = 'none'; }, 4500);
+  document.getElementById('r-icon').textContent   = icon;
+  document.getElementById('r-title').textContent  = title;
+  document.getElementById('r-name').textContent   = name;
+  document.getElementById('r-detail').textContent = detail;
+  // Auto-hide after 5 seconds
+  setTimeout(() => { box.style.display = 'none'; }, 5000);
 }
 
 // ══════════════════════════════════════════════════
@@ -989,10 +988,10 @@ function renderLiveTable(filter = '') {
   const fl = filter.toLowerCase();
   STUDENTS.forEach(s => {
     if (fl && !s.name.toLowerCase().includes(fl) && !s.usn.toLowerCase().includes(fl)) return;
-    const key = s.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'');
-    const isP = presentUSNs.has(key);
+    const key  = s.usn.toUpperCase().replace(/-T$/,'').replace(/\s/g,'');
+    const isP  = presentUSNs.has(key);
     const time = window._presentTimes?.[key] || '—';
-    const tr = document.createElement('tr');
+    const tr   = document.createElement('tr');
     tr.innerHTML = `
       <td style="color:var(--muted)">${s.sl}</td>
       <td><span class="usn-chip">${s.usn}</span></td>
@@ -1060,7 +1059,10 @@ function renderFullTable() {
   tbody.innerHTML = '';
   STUDENTS.forEach(s => {
     let pCount = 0;
-    let row = `<tr><td style="color:var(--muted)">${s.sl}</td><td><span class="usn-chip">${s.usn}</span></td><td>${s.name}</td>`;
+    let row = `<tr>
+      <td style="color:var(--muted)">${s.sl}</td>
+      <td><span class="usn-chip">${s.usn}</span></td>
+      <td>${s.name}</td>`;
     sessions.forEach(h => {
       const v = h.records[s.usn] || 'A';
       if (v==='P') pCount++;
@@ -1077,7 +1079,7 @@ function renderFullTable() {
 }
 
 // ══════════════════════════════════════════════════
-// EXPORT
+// EXPORT CSV
 // ══════════════════════════════════════════════════
 function exportCSV() {
   const sessions = history.slice().reverse();
@@ -1090,7 +1092,7 @@ function exportCSV() {
   });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = `Attendance_ISE_Python_2025-26_${new Date().toISOString().substr(0,10)}.csv`;
+  a.download = `22IS444_Attendance_2025-26_${new Date().toISOString().substr(0,10)}.csv`;
   a.click();
   notify('CSV exported!', 'success');
 }
@@ -1111,18 +1113,16 @@ function notify(msg, type='success') {
 document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
 
-  // If URL has attendance token → go straight to student submission
+  // Student clicked WhatsApp link → go straight to student screen
   if (params.get('token')) {
     showStudent();
     return;
   }
 
-  // Show professor card only if ?prof=1 is in URL
+  // Professor URL (?prof=1) → show professor card
   if (params.get('prof') === '1') {
     document.getElementById('prof-card').style.display = 'block';
   }
-
-  // If no special params → students land here, only Student button visible
 });
 </script>
 </body>
