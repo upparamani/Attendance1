@@ -362,7 +362,7 @@
       <div class="v-badge">VERSION 3 — SECURE</div>
     </div>
     <div class="login-cards">
-      <div class="login-card teacher" onclick="askPin()">
+      <div class="login-card teacher" id="prof-card" onclick="askPin()" style="display:none;">
         <div class="icon">👨‍🏫</div>
         <h3>Professor</h3>
         <p>PIN protected</p>
@@ -551,7 +551,7 @@
 // ══════════════════════════════════════════════════
 // CONFIG — change PIN here
 // ══════════════════════════════════════════════════
-const PROFESSOR_PIN = '0000'; // ← Change this to your preferred 4-digit PIN
+const PROFESSOR_PIN = '2580'; // ← Change this to your preferred 4-digit PIN
 
 // ══════════════════════════════════════════════════
 // STUDENTS
@@ -1109,11 +1109,20 @@ function notify(msg, type='success') {
 // INIT
 // ══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  // If URL has token → go straight to student view
   const params = new URLSearchParams(window.location.search);
+
+  // If URL has attendance token → go straight to student submission
   if (params.get('token')) {
     showStudent();
+    return;
   }
+
+  // Show professor card only if ?prof=1 is in URL
+  if (params.get('prof') === '1') {
+    document.getElementById('prof-card').style.display = 'block';
+  }
+
+  // If no special params → students land here, only Student button visible
 });
 </script>
 </body>
