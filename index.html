@@ -539,6 +539,15 @@
         </div>
       </div>
 
+      <!-- Checking (loading) -->
+      <div id="student-checking" style="display:none;">
+        <div class="session-info-box" style="text-align:center;padding:24px;">
+          <div style="font-size:32px;margin-bottom:10px;">⏳</div>
+          <div style="color:var(--accent);font-weight:700;letter-spacing:2px;">CHECKING SESSION…</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">Please wait</div>
+        </div>
+      </div>
+
       <!-- No valid session -->
       <div id="student-closed" style="display:none;">
         <div class="closed-box">
@@ -546,6 +555,15 @@
           <h3>Not Open Yet</h3>
           <p>Your professor hasn't opened attendance.<br>
           Wait for the WhatsApp message<br>and click that link directly.</p>
+        </div>
+      </div>
+
+      <!-- Network error -->
+      <div id="student-neterr" style="display:none;">
+        <div class="closed-box" style="border-color:rgba(255,214,10,0.3);background:rgba(255,214,10,0.08);">
+          <span class="icon">📶</span>
+          <h3 style="color:var(--yellow);">No Internet</h3>
+          <p>Could not connect to server.<br>Check your internet connection<br>and refresh the page.</p>
         </div>
       </div>
 
@@ -755,29 +773,54 @@ function showTeacher() {
 }
 
 // ══════════════════════════════════════════════════
-// STUDENT — token validation
+// STUDENT — token validation via JSONBin (works across ALL devices)
 // ══════════════════════════════════════════════════
-function showStudent() {
+async function showStudent() {
+  // Show the student screen immediately
+  showScreen('screen-student');
+
+  // Hide all state divs, show checking spinner
+  document.getElementById('student-valid').style.display    = 'none';
+  document.getElementById('student-closed').style.display   = 'none';
+  document.getElementById('student-neterr').style.display   = 'none';
+  document.getElementById('result-box').style.display       = 'none';
+  document.getElementById('student-checking').style.display = 'block';
+
   const params   = new URLSearchParams(window.location.search);
   const urlToken = params.get('token');
-  const active   = getActiveToken();
-  const valid    = urlToken && active && (urlToken === active.token);
 
-  document.getElementById('student-valid').style.display  = valid ? 'block' : 'none';
-  document.getElementById('student-closed').style.display = valid ? 'none'  : 'block';
-  document.getElementById('result-box').style.display     = 'none';
-
-  if (valid) {
-    sessionDate   = active.date;
-    sessionPeriod = active.period;
-    sessionToken  = active.token;
-    sessionActive = true;
-    document.getElementById('si-date').textContent   = formatDate(active.date);
-    document.getElementById('si-period').textContent = active.period;
-    document.getElementById('usn-input').value = '';
-    setTimeout(() => document.getElementById('usn-input').focus(), 400);
+  if (!urlToken) {
+    document.getElementById('student-checking').style.display = 'none';
+    document.getElementById('student-closed').style.display   = 'block';
+    return;
   }
-  showScreen('screen-student');
+
+  try {
+    // Check JSONBin — works on ANY device, not just professor's phone
+    const data   = await binGet();
+    const active = data.activeSession;
+    const valid  = active && (active.token === urlToken);
+
+    document.getElementById('student-checking').style.display = 'none';
+
+    if (valid) {
+      sessionDate   = active.date;
+      sessionPeriod = active.period;
+      sessionToken  = active.token;
+      sessionActive = true;
+
+      document.getElementById('student-valid').style.display = 'block';
+      document.getElementById('si-date').textContent         = formatDate(active.date);
+      document.getElementById('si-period').textContent       = active.period;
+      document.getElementById('usn-input').value             = '';
+      setTimeout(() => document.getElementById('usn-input').focus(), 400);
+    } else {
+      document.getElementById('student-closed').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('student-checking').style.display = 'none';
+    document.getElementById('student-neterr').style.display   = 'block';
+  }
 }
 
 function formatDate(d) {
@@ -1063,12 +1106,7 @@ async function submitAttendance() {
     return;
   }
 
-  // Validate token still active
-  const active = getActiveToken();
-  if (!active || active.token !== sessionToken) {
-    showResult('error','⛔','Session Closed','','The professor has closed attendance.');
-    return;
-  }
+  // Token validated via JSONBin during submitAttendance itself (see below)
 
   const student = usnMap[raw];
   if (!student) {
