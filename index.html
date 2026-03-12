@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>22IS444 – Attendance | KLSGIT ISE</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
 
@@ -162,7 +163,7 @@
   .wa-box-label { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
   .wa-msg { font-size:12px; line-height:1.8; color:var(--text); white-space:pre-wrap; word-break:break-all; }
 
-  .qr-link-row { display:flex; gap:16px; align-items:flex-start; width:100%; flex-wrap:wrap; justify-content:center; }
+  .qr-link-row { display:flex; gap:16px; align-items:center; flex-direction:column; width:100%; }
   .qr-box { background:#fff; padding:10px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .link-box { flex:1; min-width:180px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; }
   .link-box-label { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
@@ -411,7 +412,7 @@
       </div>
       <div class="flex-row">
         <button class="btn btn-ghost" onclick="showScreen('screen-full-table')">📊 Full Register</button>
-        <button class="btn btn-yellow" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="btn btn-yellow" onclick="exportXLSX()">⬇ Export CSV</button>
         <button class="btn btn-ghost" onclick="showScreen('screen-login')">← Exit</button>
       </div>
     </div>
@@ -583,7 +584,7 @@
         <div class="topbar-sub">22IS444 · ISE · KLS GIT · 2025–26</div>
       </div>
       <div class="flex-row">
-        <button class="btn btn-yellow" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="btn btn-yellow" onclick="exportXLSX()">⬇ Export CSV</button>
         <button class="btn btn-ghost" onclick="showScreen('screen-teacher')">← Back</button>
       </div>
     </div>
@@ -1043,7 +1044,7 @@ _Do not share this link outside the class._`;
 
   const qr = document.getElementById('qr-container');
   qr.innerHTML = '';
-  new QRCode(qr, { text:url, width:140, height:140, colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.H });
+  new QRCode(qr, { text:url, width:300, height:300, colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.H });
 }
 
 function copyWAMessage() {
@@ -1287,22 +1288,84 @@ function renderFullTable() {
 }
 
 // ══════════════════════════════════════════════════
-// EXPORT
+// EXPORT — formatted Excel .xlsx, 25 sessions per sheet
 // ══════════════════════════════════════════════════
-function exportCSV() {
-  const sessions = history.slice().reverse();
-  let csv = 'Sl.No,USN,Name,' + sessions.map(h=>`${h.date} ${h.period}`).join(',') + ',Total Present,Percentage\n';
-  STUDENTS.forEach(s => {
-    let p = 0;
-    const row = sessions.map(h=>{ const v=h.records[s.usn]||'A'; if(v==='P')p++; return v; });
-    const pct = sessions.length ? Math.round((p/sessions.length)*100) : 0;
-    csv += `${s.sl},"${s.usn}","${s.name}",${row.join(',')},${p},${pct}%\n`;
-  });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = `22IS444_Attendance_2025-26_${new Date().toISOString().substr(0,10)}.csv`;
-  a.click();
-  notify('CSV exported!', 'success');
+function exportXLSX() {
+  if (!window.XLSX) { notify('Excel library loading… try again in 2s', 'error'); return; }
+
+  const allSessions = history.slice().reverse(); // oldest first
+  if (!allSessions.length) { notify('No sessions to export', 'error'); return; }
+
+  const wb = XLSX.utils.book_new();
+  const CHUNK = 25; // sessions per sheet
+
+  // Split sessions into chunks of 25
+  for (let ci = 0; ci < Math.ceil(allSessions.length / CHUNK); ci++) {
+    const sessions = allSessions.slice(ci * CHUNK, ci * CHUNK + CHUNK);
+    const sheetLabel = `Sheet${ci + 1} (${sessions[0].date.substr(5)} – ${sessions[sessions.length-1].date.substr(5)})`;
+
+    const rows = [];
+
+    // ── Title row
+    rows.push(['KLS Gogte Institute of Technology']);
+    rows.push(['Dept. of Information Science & Engineering']);
+    rows.push(['22IS444 — Python Programming  |  Academic Year 2025–26']);
+    rows.push([`Attendance Register — ${sessions[0].date} to ${sessions[sessions.length-1].date}`]);
+    rows.push([]); // blank
+
+    // ── Header row
+    const header = ['Sl.No', 'USN', 'Student Name',
+      ...sessions.map(h => `${h.date.substr(5)}\n${h.period}`),
+      'Total\nPresent', 'Attendance\n%'
+    ];
+    rows.push(header);
+
+    // ── Student rows
+    STUDENTS.forEach(s => {
+      let p = 0;
+      const cells = sessions.map(h => {
+        const v = h.records[s.usn] || 'A';
+        if (v === 'P') p++;
+        return v;
+      });
+      const pct = sessions.length ? Math.round((p / sessions.length) * 100) : 0;
+      rows.push([s.sl, s.usn, s.name, ...cells, p, pct + '%']);
+    });
+
+    rows.push([]); // blank
+    rows.push(['', '', 'Total Present',
+      ...sessions.map(h => Object.values(h.records).filter(v=>v==='P').length),
+      '', ''
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+
+    // ── Column widths
+    const colWidths = [
+      { wch: 5 },  // Sl
+      { wch: 16 }, // USN
+      { wch: 30 }, // Name
+      ...sessions.map(() => ({ wch: 7 })), // date cols
+      { wch: 8 },  // Total
+      { wch: 8 },  // %
+    ];
+    ws['!cols'] = colWidths;
+
+    // ── Merge title cells across all columns
+    const totalCols = 3 + sessions.length + 2;
+    ws['!merges'] = [
+      { s:{r:0,c:0}, e:{r:0,c:totalCols-1} },
+      { s:{r:1,c:0}, e:{r:1,c:totalCols-1} },
+      { s:{r:2,c:0}, e:{r:2,c:totalCols-1} },
+      { s:{r:3,c:0}, e:{r:3,c:totalCols-1} },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, sheetLabel.substr(0, 31));
+  }
+
+  const fname = `22IS444_Attendance_2025-26_${new Date().toISOString().substr(0,10)}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  notify(`✅ Excel exported — ${history.length} sessions`, 'success');
 }
 
 // ══════════════════════════════════════════════════
